@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "simple-skill-api",
+  "name": "api-ndinhnguyen",
   "main": "src/entry.py",
   "compatibility_date": "2026-04-28",
   "compatibility_flags": ["python_workers"],
@@ -8,13 +8,13 @@
     "enabled": true
   },
   "vars": {
-    "ALLOWED_ORIGINS": "http://localhost:3000"
+    "ALLOWED_ORIGINS": "http://localhost:3000,https://ndinhnguyen.pages.dev"
   },
   "d1_databases": [
     {
-      "binding": "BOOKMARKS_DB",
-      "database_name": "skill",
-      "database_id": "46ef5404-0408-43af-95dc-cd664f8629cd",
+      "binding": "DB",
+      "database_name": "ndinhnguyen",
+      "database_id": "b5770ece-d7f0-410b-b243-8154b34c3733",
       "migrations_dir": "migrations"
     }
   ]

@@ -15,7 +15,7 @@ class EnvClient:
         self.env = SimpleNamespace(
             ADMIN_TOKEN="secret",
             ALLOWED_ORIGINS="https://frontend.pages.dev,http://localhost:3000",
-            BOOKMARKS_DB=None,
+            DB=None,
         )
 
     def __enter__(self):

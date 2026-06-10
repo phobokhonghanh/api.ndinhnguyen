@@ -4,7 +4,10 @@ from typing import Any
 from urllib.parse import urlparse
 from uuid import uuid4
 
-from . import repository
+try:
+    from . import repository
+except ImportError:
+    import repository
 
 
 COLORS = {"blue", "emerald", "amber", "rose", "violet", "cyan"}

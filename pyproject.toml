@@ -1,16 +1,22 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "simple-skill-api"
+name = "api-ndinhnguyen"
 version = "0.1.0"
-description = "FastAPI backend for the Simple Skill bookmark dashboard"
+description = "FastAPI backend for the ndinhnguyen bookmark dashboard"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115.0",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
   "httpx>=0.28.0",
   "pytest>=8.3.0",
+  "workers-py>=1.11.0",
+  "workers-runtime-sdk",
 ]
 
 [tool.pytest.ini_options]

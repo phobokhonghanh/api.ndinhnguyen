@@ -4,12 +4,17 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from .context import worker_env
-from .models import BookmarkInput, CategoryInput
-from . import service
+try:
+    from .context import worker_env
+    from .models import BookmarkInput, CategoryInput
+    from . import service
+except ImportError:
+    from context import worker_env
+    from models import BookmarkInput, CategoryInput
+    import service
 
 
-app = FastAPI(title="Simple Skill API", docs_url=None, redoc_url=None)
+app = FastAPI(title="api.ndinhnguyen", docs_url=None, redoc_url=None)
 
 
 def _env_value(env: Any, key: str, default: str = "") -> str:
@@ -59,7 +64,7 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
 
 def _db() -> Any:
     env = worker_env.get(None)
-    return getattr(env, "BOOKMARKS_DB", None)
+    return getattr(env, "DB", None)
 
 
 def _model_data(model: Any) -> dict[str, Any]:
@@ -81,7 +86,7 @@ async def _run(operation: Any) -> JSONResponse:
 
 @app.get("/health")
 async def health() -> dict[str, Any]:
-    return service.response(True, "ok", {"service": "simple-skill-api"})
+    return service.response(True, "ok", {"service": "api-ndinhnguyen"})
 
 
 @app.get("/api/bookmarks")
