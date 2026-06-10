@@ -1,0 +1,6 @@
+.dev.vars
+.pytest_cache/
+.venv/
+__pycache__/
+*.pyc
+.wrangler/

@@ -1,0 +1,2 @@
+ADMIN_TOKEN=replace-me
+ALLOWED_ORIGINS=http://localhost:3000,https://your-project.pages.dev
