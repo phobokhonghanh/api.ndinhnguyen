@@ -1,6 +1,6 @@
 # api.ndinhnguyen
 
-> _Bookmark API for Nguyen Dinh Nguyen_
+> _Personal API for Nguyen Dinh Nguyen_
 
 ![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat-square&logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-API-009688?style=flat-square&logo=fastapi&logoColor=white) ![Cloudflare Workers](https://img.shields.io/badge/Cloudflare_Workers-Python-F38020?style=flat-square&logo=cloudflareworkers&logoColor=white) ![Cloudflare D1](https://img.shields.io/badge/Cloudflare_D1-SQLite-F38020?style=flat-square&logo=cloudflare&logoColor=white) ![Make](https://img.shields.io/badge/Make-Workflow-427819?style=flat-square&logo=gnu&logoColor=white)
 
@@ -25,12 +25,51 @@
 
 ## Development
 
+### Cài đặt python 3.12
+
 ```bash
-python3 -m venv .venv
+# Option 1: Add deadsnakes PPA (Recommended)
+sudo apt update
+sudo apt install -y software-properties-common
+
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+```
+```bash
+#Option 2: Add deadsnakes repository (manually)
+
+#Add repository
+echo "deb https://ppa.launchpadcontent.net/deadsnakes/ppa/ubuntu jammy main" \
+| sudo tee /etc/apt/sources.list.d/deadsnakes.list
+
+#Import repository signing key
+sudo apt-key adv \
+  --keyserver keyserver.ubuntu.com \
+  --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
+```
+
+```bash
+# Refresh package index
+sudo apt update
+
+# Install Python 3.12
+sudo apt install -y python3.12 python3.12-venv python3.12-dev
+Verify installation
+python3.12 --version
+
+Expected output:
+
+Python 3.12.x
+```
+
+### Run project local
+
+```bash
+python3.12 -m venv .venv
 . .venv/bin/activate
 make install
 cp .dev.vars.example .dev.vars
 make db-migrate-local
+pip install uv
 make run
 ```
 

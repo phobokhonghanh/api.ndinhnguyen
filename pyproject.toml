@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "api-ndinhnguyen"
 version = "0.1.0"
-description = "FastAPI backend for the ndinhnguyen bookmark dashboard"
+description = "Personal API for Nguyen Dinh Nguyen"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115.0",
