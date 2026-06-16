@@ -8,8 +8,16 @@
     "enabled": true
   },
   "vars": {
-    "ALLOWED_ORIGINS": "http://localhost:3000,https://ndinhnguyen.pages.dev"
+    "ALLOWED_ORIGINS": "http://localhost:3000,https://ndinhnguyen.pages.dev",
+    "STATS_SNAPSHOT_PATH_TEMPLATE": "lakehouse-raw/{product}/snapshot/loaddate={yyyymmdd}/{machine_id}.csv",
+    "STATS_RUNTIME_PATH_TEMPLATE": "lakehouse-raw/{product}/runtime/loaddate={yyyymmdd}/{machine_id}_{batch_id}.jsonl"
   },
+  "r2_buckets": [
+    {
+      "binding": "STATS_BUCKET",
+      "bucket_name": "ndinhnguyen-stats"
+    }
+  ],
   "d1_databases": [
     {
       "binding": "DB",

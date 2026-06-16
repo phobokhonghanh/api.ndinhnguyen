@@ -18,12 +18,26 @@
 | `/api/categories`            | Auth POST   | Creates a category.                                                               |
 | `/api/categories/{id}`       | Auth PUT    | Updates a category.                                                               |
 | `/api/categories/{id}`       | Auth DELETE | Deletes a category with business-rule checks.                                     |
+| `/api/stats`                 | Public POST | Stores snapshot CSV markers and runtime JSONL uploads in R2.                     |
 
-> All `/api/*` routes require `Authorization: Bearer <ADMIN_TOKEN>`.
+> All `/api/*` routes require `Authorization: Bearer <ADMIN_TOKEN>` except
+> public `POST /api/stats`.
 
 ---
 
 ## Development
+
+## Backend structure
+
+The Worker is assembled in `src/main.py` and keeps `src/app.py` as a
+compatibility import for existing runtime/tests. Feature code is organized by
+boundary:
+
+- `src/api/`: HTTP middleware and route adapters.
+- `src/core/`: context, settings, and response helpers.
+- `src/features/bookmarks/`: bookmark/category schemas, use cases, repository.
+- `src/features/stats/`: stats command, service, validators, path builder, handlers.
+- `src/infra/`: Cloudflare D1/R2 adapter helpers.
 
 ### Cài đặt python 3.12
 
@@ -71,6 +85,13 @@ cp .dev.vars.example .dev.vars
 make db-migrate-local
 pip install uv
 make run
+```
+
+`POST /api/stats` uses the `STATS_BUCKET` R2 binding and these path templates:
+
+```bash
+STATS_SNAPSHOT_PATH_TEMPLATE=lakehouse-raw/{product}/snapshot/loaddate={yyyymmdd}/{machine_id}.csv
+STATS_RUNTIME_PATH_TEMPLATE=lakehouse-raw/{product}/runtime/loaddate={yyyymmdd}/{machine_id}_{batch_id}.jsonl
 ```
 
 Run tests with:

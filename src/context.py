@@ -1,5 +1,4 @@
-from contextvars import ContextVar
-from typing import Any
-
-
-worker_env: ContextVar[Any] = ContextVar("worker_env")
+try:
+    from .core.context import worker_env
+except ImportError:
+    from src.core.context import worker_env
