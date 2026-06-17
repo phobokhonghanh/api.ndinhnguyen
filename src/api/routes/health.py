@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter
 
-from ...core.responses import response
+from core.responses import response
 
 
 router = APIRouter()

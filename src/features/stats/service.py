@@ -1,14 +1,14 @@
 from typing import Any
 
-from ...core.settings import env_value
-from ...infra.object_store import R2ObjectStore
-from .constants import DEFAULT_RUNTIME_PATH_TEMPLATE, DEFAULT_SNAPSHOT_PATH_TEMPLATE
-from .errors import StatsStorageError, StatsValidationError
-from .path_builder import PathTemplateBuilder
-from .runtime import RuntimeHandler
-from .schemas import StatsCommand
-from .snapshot import SnapshotHandler
-from .validators import validate_product, validate_safe_id
+from core.settings import env_value
+from infra.object_store import R2ObjectStore
+from features.stats.constants import DEFAULT_RUNTIME_PATH_TEMPLATE, DEFAULT_SNAPSHOT_PATH_TEMPLATE
+from features.stats.errors import StatsStorageError, StatsValidationError
+from features.stats.path_builder import PathTemplateBuilder
+from features.stats.runtime import RuntimeHandler
+from features.stats.schemas import StatsCommand
+from features.stats.snapshot import SnapshotHandler
+from features.stats.validators import validate_product, validate_safe_id
 
 
 class StatsService:
@@ -133,7 +133,7 @@ class StatsService:
                 "batch_id": batch_id,
             },
         )
-        await self.runtime_handler.write(store, runtime_key, command.file)
+        await self.runtime_handler.write(store, runtime_key, command.file, machine_id)
 
 
 async def handle_stats(

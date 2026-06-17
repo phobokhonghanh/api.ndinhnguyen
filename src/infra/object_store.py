@@ -13,7 +13,7 @@ class R2ObjectStore:
         if callable(text):
             result = text()
             if hasattr(result, "__await__"):
-                return await result
+                return await result  # type: ignore
             return result
         body = getattr(obj, "body", b"")
         if isinstance(body, bytes):

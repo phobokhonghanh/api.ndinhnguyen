@@ -6,8 +6,8 @@ pytest.importorskip("httpx")
 
 from fastapi.testclient import TestClient
 
-from src.app import app
-from src.context import worker_env
+from app import app
+from context import worker_env
 
 
 class FakeR2Object:
@@ -128,7 +128,7 @@ def test_stats_runtime_upload_writes_object():
     assert response.json() == {"status": "ok", "snapshot": False, "runtime": True}
     key = next(iter(bucket.objects))
     assert key.endswith("/machine-1_batch-1.jsonl")
-    assert bucket.objects[key] == b'{"id":"runtime-1"}\n'
+    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": [{"id": "runtime-1"}]}\n'
 
 
 def test_stats_combined_request_stores_snapshot_and_runtime():

@@ -1,12 +1,12 @@
 import re
 
-from .constants import (
+from features.stats.constants import (
     ALLOWED_STATS_PRODUCTS,
     MAX_RUNTIME_FILE_SIZE,
     MAX_RUNTIME_ID_LENGTH,
     MAX_RUNTIME_LINES,
 )
-from .errors import StatsValidationError
+from features.stats.errors import StatsValidationError
 
 
 SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")

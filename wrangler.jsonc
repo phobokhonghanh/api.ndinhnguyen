@@ -3,19 +3,21 @@
   "name": "api-ndinhnguyen",
   "main": "src/entry.py",
   "compatibility_date": "2026-04-28",
-  "compatibility_flags": ["python_workers"],
+  "compatibility_flags": [
+    "python_workers"
+  ],
   "observability": {
     "enabled": true
   },
   "vars": {
     "ALLOWED_ORIGINS": "http://localhost:3000,https://ndinhnguyen.pages.dev",
-    "STATS_SNAPSHOT_PATH_TEMPLATE": "lakehouse-raw/{product}/snapshot/loaddate={yyyymmdd}/{machine_id}.csv",
-    "STATS_RUNTIME_PATH_TEMPLATE": "lakehouse-raw/{product}/runtime/loaddate={yyyymmdd}/{machine_id}_{batch_id}.jsonl"
+    "STATS_SNAPSHOT_PATH_TEMPLATE": "{product}/snapshot/loaddate={yyyymmdd}/{machine_id}.csv",
+    "STATS_RUNTIME_PATH_TEMPLATE": "{product}/runtime/loaddate={yyyymmdd}/{machine_id}_{batch_id}.jsonl"
   },
   "r2_buckets": [
     {
       "binding": "STATS_BUCKET",
-      "bucket_name": "ndinhnguyen-stats"
+      "bucket_name": "lakehouse-raw"
     }
   ],
   "d1_databases": [

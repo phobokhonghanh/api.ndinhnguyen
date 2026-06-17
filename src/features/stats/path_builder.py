@@ -1,6 +1,6 @@
 import string
 
-from .errors import StatsStorageError
+from features.stats.errors import StatsStorageError
 
 
 class PathTemplateBuilder:

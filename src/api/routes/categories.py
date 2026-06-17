@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from core.context import worker_env
 from core.responses import json_response, response
 from features.bookmarks import service
-from features.bookmarks.schemas import BookmarkInput
+from features.bookmarks.schemas import CategoryInput
 
 
 router = APIRouter()
@@ -34,25 +34,20 @@ async def _run(operation: Any) -> JSONResponse:
         return json_response(response(False, "unknown_error"), 500)
 
 
-@router.get("/api/bookmarks")
-async def get_bookmarks(q: str = "", categoryId: str = "") -> JSONResponse:
-    return await _run(lambda db: service.dashboard(db, q, categoryId))
+@router.post("/api/categories")
+async def create_category(payload: CategoryInput) -> JSONResponse:
+    return await _run(lambda db: service.save_category(db, _model_data(payload)))
 
 
-@router.post("/api/bookmarks")
-async def create_bookmark(payload: BookmarkInput) -> JSONResponse:
-    return await _run(lambda db: service.save_bookmark(db, _model_data(payload)))
-
-
-@router.put("/api/bookmarks/{bookmark_id}")
-async def update_bookmark(
-    bookmark_id: str, payload: BookmarkInput
+@router.put("/api/categories/{category_id}")
+async def update_category(
+    category_id: str, payload: CategoryInput
 ) -> JSONResponse:
     return await _run(
-        lambda db: service.save_bookmark(db, _model_data(payload), bookmark_id)
+        lambda db: service.save_category(db, _model_data(payload), category_id)
     )
 
 
-@router.delete("/api/bookmarks/{bookmark_id}")
-async def delete_bookmark(bookmark_id: str) -> JSONResponse:
-    return await _run(lambda db: service.remove_bookmark(db, bookmark_id))
+@router.delete("/api/categories/{category_id}")
+async def delete_category(category_id: str) -> JSONResponse:
+    return await _run(lambda db: service.remove_category(db, category_id))

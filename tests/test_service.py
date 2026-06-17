@@ -1,6 +1,6 @@
 import asyncio
 
-from src.features.bookmarks import service
+from features.bookmarks import service
 
 
 def test_slugify_vietnamese_name():

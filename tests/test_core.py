@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
-from src.api.middleware import PUBLIC_API_PATHS
-from src.core.settings import AppSettings, env_value
+from api.middleware import PUBLIC_API_PATHS
+from core.settings import AppSettings, env_value
 
 
 def test_env_value_returns_default_for_missing_or_none():

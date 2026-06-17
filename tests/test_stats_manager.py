@@ -2,10 +2,10 @@ import asyncio
 from datetime import UTC, datetime
 from types import SimpleNamespace
 
-from src.features.stats import constants
-from src.features.stats.errors import StatsStorageError, StatsValidationError
-from src.features.stats.path_builder import PathTemplateBuilder
-from src.features.stats.service import handle_stats
+from features.stats import constants
+from features.stats.errors import StatsStorageError, StatsValidationError
+from features.stats.path_builder import PathTemplateBuilder
+from features.stats.service import handle_stats
 
 
 class FakeUpload:
@@ -61,7 +61,7 @@ def test_default_templates_build_expected_keys():
             {"product", "yyyymmdd", "machine_id"},
             values,
         )
-        == "lakehouse-raw/autohdr/snapshot/loaddate=20260616/machine-1.csv"
+        == "autohdr/snapshot/loaddate=20260616/machine-1.csv"
     )
     assert (
         PathTemplateBuilder().build(
@@ -69,7 +69,7 @@ def test_default_templates_build_expected_keys():
             {"product", "yyyymmdd", "machine_id", "batch_id"},
             values,
         )
-        == "lakehouse-raw/autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl"
+        == "autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl"
     )
 
 
@@ -104,7 +104,7 @@ def test_template_rejects_unknown_placeholder():
 def test_snapshot_creates_appends_and_skips_duplicate_event():
     bucket = FakeR2Bucket()
     now = datetime(2026, 6, 16, 1, 2, 3, tzinfo=UTC)
-    key = "lakehouse-raw/autohdr/snapshot/loaddate=20260616/machine-1.csv"
+    key = "autohdr/snapshot/loaddate=20260616/machine-1.csv"
 
     run(
         handle_stats(
@@ -161,7 +161,7 @@ def test_snapshot_creates_appends_and_skips_duplicate_event():
 def test_runtime_writes_jsonl_and_overwrites_same_batch_id():
     bucket = FakeR2Bucket()
     now = datetime(2026, 6, 16, tzinfo=UTC)
-    key = "lakehouse-raw/autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl"
+    key = "autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl"
 
     run(
         handle_stats(
@@ -192,7 +192,7 @@ def test_runtime_writes_jsonl_and_overwrites_same_batch_id():
         )
     )
 
-    assert bucket.objects[key] == b'{"id":"runtime-2"}\n'
+    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": [{"id": "runtime-2"}]}\n'
 
 
 def test_combined_snapshot_and_runtime_request_stores_both():
@@ -216,8 +216,8 @@ def test_combined_snapshot_and_runtime_request_stores_both():
 
     assert result == {"status": "ok", "snapshot": True, "runtime": True}
     assert set(bucket.objects) == {
-        "lakehouse-raw/autohdr/snapshot/loaddate=20260616/machine-1.csv",
-        "lakehouse-raw/autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl",
+        "autohdr/snapshot/loaddate=20260616/machine-1.csv",
+        "autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl",
     }
 
 
@@ -300,3 +300,69 @@ def test_invalid_product_and_machine_id_return_validation_codes():
             assert exc.code == case["code"]
         else:
             raise AssertionError(f"expected {case['code']}")
+
+
+def test_runtime_handles_json_array():
+    bucket = FakeR2Bucket()
+    now = datetime(2026, 6, 16, tzinfo=UTC)
+    key = "autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl"
+
+    run(
+        handle_stats(
+            env(bucket),
+            product="autohdr",
+            machine_id="machine-1",
+            snapshot=False,
+            runtime=True,
+            user=None,
+            snapshot_event_id=None,
+            batch_id="batch-1",
+            file=FakeUpload(b'[{"id":"r-1"},{"id":"r-2"}]'),
+            now=now,
+        )
+    )
+    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": [{"id": "r-1"}, {"id": "r-2"}]}\n'
+
+
+def test_runtime_handles_jsonl_lines():
+    bucket = FakeR2Bucket()
+    now = datetime(2026, 6, 16, tzinfo=UTC)
+    key = "autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl"
+
+    run(
+        handle_stats(
+            env(bucket),
+            product="autohdr",
+            machine_id="machine-1",
+            snapshot=False,
+            runtime=True,
+            user=None,
+            snapshot_event_id=None,
+            batch_id="batch-1",
+            file=FakeUpload(b'{"id":"r-1"}\n\n{"id":"r-2"}\n'),
+            now=now,
+        )
+    )
+    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": [{"id": "r-1"}, {"id": "r-2"}]}\n'
+
+
+def test_runtime_handles_plain_text():
+    bucket = FakeR2Bucket()
+    now = datetime(2026, 6, 16, tzinfo=UTC)
+    key = "autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl"
+
+    run(
+        handle_stats(
+            env(bucket),
+            product="autohdr",
+            machine_id="machine-1",
+            snapshot=False,
+            runtime=True,
+            user=None,
+            snapshot_event_id=None,
+            batch_id="batch-1",
+            file=FakeUpload(b"plain log line 1\nplain log line 2\n"),
+            now=now,
+        )
+    )
+    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": ["plain log line 1", "plain log line 2"]}\n'

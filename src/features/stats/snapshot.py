@@ -2,7 +2,7 @@ import csv
 import io
 from datetime import datetime
 
-from .constants import SNAPSHOT_FIELDS
+from features.stats.constants import SNAPSHOT_FIELDS
 
 
 class SnapshotHandler:

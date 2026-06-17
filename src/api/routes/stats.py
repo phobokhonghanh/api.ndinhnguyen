@@ -1,11 +1,11 @@
 from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import JSONResponse
 
-from ...core.context import worker_env
-from ...core.responses import json_response, response
-from ...features.stats.errors import StatsStorageError, StatsValidationError
-from ...features.stats.schemas import StatsCommand
-from ...features.stats.service import StatsService
+from core.context import worker_env
+from core.responses import json_response, response
+from features.stats.errors import StatsStorageError, StatsValidationError
+from features.stats.schemas import StatsCommand
+from features.stats.service import StatsService
 
 
 router = APIRouter()

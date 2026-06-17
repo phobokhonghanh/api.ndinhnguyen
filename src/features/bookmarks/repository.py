@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import uuid4
 
-from ...infra.d1 import first, row_value, rows
+from infra.d1 import first, row_value, rows
 
 
 def _category(row: Any) -> dict[str, Any]:

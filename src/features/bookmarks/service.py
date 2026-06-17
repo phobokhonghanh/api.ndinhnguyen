@@ -4,8 +4,8 @@ from typing import Any
 from urllib.parse import urlparse
 from uuid import uuid4
 
-from ...core.responses import response
-from . import repository
+from core.responses import response
+from features.bookmarks import repository
 
 
 COLORS = {"blue", "emerald", "amber", "rose", "violet", "cyan"}
