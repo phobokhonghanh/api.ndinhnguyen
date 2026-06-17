@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any
 
 from core.settings import env_value
@@ -36,26 +37,34 @@ class StatsService:
             raise StatsStorageError
         store = R2ObjectStore(bucket)
 
+        tasks = []
         try:
             if command.snapshot:
-                await self._handle_snapshot(
-                    env,
-                    store,
-                    product=product,
-                    machine_id=machine_id,
-                    yyyymmdd=yyyymmdd,
-                    command=command,
+                tasks.append(
+                    self._handle_snapshot(
+                        env,
+                        store,
+                        product=product,
+                        machine_id=machine_id,
+                        yyyymmdd=yyyymmdd,
+                        command=command,
+                    )
                 )
 
             if command.runtime:
-                await self._handle_runtime(
-                    env,
-                    store,
-                    product=product,
-                    machine_id=machine_id,
-                    yyyymmdd=yyyymmdd,
-                    command=command,
+                tasks.append(
+                    self._handle_runtime(
+                        env,
+                        store,
+                        product=product,
+                        machine_id=machine_id,
+                        yyyymmdd=yyyymmdd,
+                        command=command,
+                    )
                 )
+
+            if tasks:
+                await asyncio.gather(*tasks)
         except StatsValidationError:
             raise
         except Exception as exc:

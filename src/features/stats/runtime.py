@@ -9,24 +9,7 @@ class RuntimeHandler:
         validate_runtime_bytes(content)
 
         text = content.decode("utf-8")
-        try:
-            # First try parsing the entire file as a single JSON array/object
-            parsed = json.loads(text)
-            if isinstance(parsed, list):
-                parsed_data = parsed
-            else:
-                parsed_data = [parsed]
-        except json.JSONDecodeError:
-            # Otherwise parse as line-by-line JSON/JSONL, fallback to raw string line
-            parsed_data = []
-            for line in text.splitlines():
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    parsed_data.append(json.loads(line))
-                except json.JSONDecodeError:
-                    parsed_data.append(line)
+        parsed_data = [line.strip() for line in text.splitlines() if line.strip()]
 
         processed = {
             "machine_id": machine_id,

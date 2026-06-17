@@ -173,7 +173,7 @@ def test_runtime_writes_jsonl_and_overwrites_same_batch_id():
             user=None,
             snapshot_event_id=None,
             batch_id="batch-1",
-            file=FakeUpload(b'{"id":"runtime-1"}\n'),
+            file=FakeUpload(b'uuid-1\n'),
             now=now,
         )
     )
@@ -187,12 +187,12 @@ def test_runtime_writes_jsonl_and_overwrites_same_batch_id():
             user=None,
             snapshot_event_id=None,
             batch_id="batch-1",
-            file=FakeUpload(b'{"id":"runtime-2"}\n'),
+            file=FakeUpload(b'uuid-2\n'),
             now=now,
         )
     )
 
-    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": [{"id": "runtime-2"}]}\n'
+    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": ["uuid-2"]}\n'
 
 
 def test_combined_snapshot_and_runtime_request_stores_both():
@@ -302,7 +302,7 @@ def test_invalid_product_and_machine_id_return_validation_codes():
             raise AssertionError(f"expected {case['code']}")
 
 
-def test_runtime_handles_json_array():
+def test_runtime_handles_json_array_as_plain_text():
     bucket = FakeR2Bucket()
     now = datetime(2026, 6, 16, tzinfo=UTC)
     key = "autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl"
@@ -321,10 +321,10 @@ def test_runtime_handles_json_array():
             now=now,
         )
     )
-    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": [{"id": "r-1"}, {"id": "r-2"}]}\n'
+    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": ["[{\\"id\\":\\"r-1\\"},{\\"id\\":\\"r-2\\"}]"]}\n'
 
 
-def test_runtime_handles_jsonl_lines():
+def test_runtime_handles_jsonl_lines_as_plain_text():
     bucket = FakeR2Bucket()
     now = datetime(2026, 6, 16, tzinfo=UTC)
     key = "autohdr/runtime/loaddate=20260616/machine-1_batch-1.jsonl"
@@ -343,7 +343,7 @@ def test_runtime_handles_jsonl_lines():
             now=now,
         )
     )
-    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": [{"id": "r-1"}, {"id": "r-2"}]}\n'
+    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": ["{\\"id\\":\\"r-1\\"}", "{\\"id\\":\\"r-2\\"}"]}\n'
 
 
 def test_runtime_handles_plain_text():

@@ -1,3 +1,4 @@
+import asyncio
 import re
 import unicodedata
 from typing import Any
@@ -77,9 +78,21 @@ def normalize_category(data: dict[str, Any]) -> dict[str, Any]:
 
 
 async def dashboard(db: Any, query: str, category_id: str) -> dict[str, Any]:
-    categories = await repository.list_categories(db)
-    selected_ids = descendant_ids(categories, category_id) if category_id else []
-    bookmarks = await repository.list_bookmarks(db, query.strip(), selected_ids)
+    if category_id:
+        categories, all_bookmarks = await asyncio.gather(
+            repository.list_categories(db),
+            repository.list_bookmarks(db, query.strip(), [])
+        )
+        selected_ids = descendant_ids(categories, category_id)
+        selected_set = set(selected_ids)
+        bookmarks = [b for b in all_bookmarks if b["categoryId"] in selected_set]
+    else:
+        categories, bookmarks = await asyncio.gather(
+            repository.list_categories(db),
+            repository.list_bookmarks(db, query.strip(), [])
+        )
+        selected_ids = []
+
     return response(
         True,
         "ok",

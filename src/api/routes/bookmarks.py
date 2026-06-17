@@ -30,7 +30,8 @@ async def _run(operation: Any) -> JSONResponse:
     try:
         result = await operation(db)
         return json_response(result, 200 if result["ok"] else 400)
-    except Exception:
+    except Exception as e:
+        print(f"Exception in bookmarks operation: {e}")
         return json_response(response(False, "unknown_error"), 500)
 
 

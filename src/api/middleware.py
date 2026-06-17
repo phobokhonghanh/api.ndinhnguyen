@@ -38,5 +38,6 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
         api_response.headers["Access-Control-Allow-Origin"] = origin
         api_response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
         api_response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        api_response.headers["Access-Control-Max-Age"] = "86400"
         api_response.headers["Vary"] = "Origin"
     return api_response

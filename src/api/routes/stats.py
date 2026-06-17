@@ -37,5 +37,9 @@ async def create_stats(
         return json_response(result)
     except StatsValidationError as exc:
         return json_response(response(False, exc.code), 400)
-    except StatsStorageError:
+    except StatsStorageError as e:
+        print(f"Stats storage error: {e}")
         return json_response(response(False, "stats_storage_error"), 500)
+    except Exception as e:
+        print(f"Exception in stats operation: {e}")
+        return json_response(response(False, "unknown_error"), 500)

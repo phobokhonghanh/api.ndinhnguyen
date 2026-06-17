@@ -121,14 +121,14 @@ def test_stats_runtime_upload_writes_object():
                 "runtime": "true",
                 "batch_id": "batch-1",
             },
-            files={"file": ("runtime.jsonl", b'{"id":"runtime-1"}\n')},
+            files={"file": ("runtime.log", b'1cfdb7db-6399-4881-b6fd-99a99c43b6e9\n')},
         )
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "snapshot": False, "runtime": True}
     key = next(iter(bucket.objects))
     assert key.endswith("/machine-1_batch-1.jsonl")
-    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": [{"id": "runtime-1"}]}\n'
+    assert bucket.objects[key] == b'{"machine_id": "machine-1", "data": ["1cfdb7db-6399-4881-b6fd-99a99c43b6e9"]}\n'
 
 
 def test_stats_combined_request_stores_snapshot_and_runtime():

@@ -75,6 +75,33 @@ Expected output:
 Python 3.12.x
 ```
 
+### Setup Cloudflare & R2 Storage
+
+Trước khi phát triển cục bộ hoặc triển khai dự án, hãy đảm bảo bạn đã đăng nhập và khởi tạo R2 Bucket trên Cloudflare:
+
+1. **Đăng nhập vào tài khoản Cloudflare:**
+   ```bash
+   npx wrangler login
+   ```
+   *Lưu ý:* Trình duyệt sẽ mở ra để xác thực. Hãy đăng nhập đúng tài khoản Cloudflare chứa D1 và R2 của bạn.
+
+2. **Xác minh tài khoản đang hoạt động:**
+   ```bash
+   npx wrangler whoami
+   ```
+   *Quan trọng:* Hãy kiểm tra trường `Account ID` hiển thị trên màn hình xem có trùng khớp với ID tài khoản chứa database của bạn hay không để tránh lỗi phân quyền (Error 404).
+
+3. **Khởi tạo R2 Bucket:**
+   Dự án sử dụng R2 Bucket tên là `lakehouse-raw` (như cấu hình trong `wrangler.jsonc`). Tạo bucket bằng lệnh:
+   ```bash
+   npx wrangler r2 bucket create lakehouse-raw
+   ```
+
+4. **Kiểm tra danh sách R2 Buckets:**
+   Để xác minh bucket đã được tạo thành công:
+   ```bash
+   npx wrangler r2 bucket list
+   ```
 ### Run project local
 
 ```bash
@@ -107,18 +134,48 @@ Cloudflare Python Workers with FastAPI packages.
 
 ## Deployment
 
-Set the production secret:
+### 1. Triển khai thủ công từ máy cá nhân (Local Machine)
 
-```bash
-make secret-put-admin-token
-```
+1. **Thiết lập Secret `ADMIN_TOKEN` trên Cloudflare:**
+   ```bash
+   make secret-put-admin-token
+   ```
+   *Lưu ý:* Hệ thống sẽ hỏi bạn nhập giá trị token bảo mật cho API.
 
-Update `ALLOWED_ORIGINS` and the D1 `database_id` in `wrangler.jsonc`, then run:
+2. **Chạy Migration để tạo các bảng dữ liệu trên Cloudflare D1:**
+   ```bash
+   make db-migrate-remote
+   ```
+   *Lưu ý:* Hãy chắc chắn bạn đã đăng nhập đúng tài khoản Cloudflare chứa database (`npx wrangler whoami`).
 
-```bash
-make db-migrate-remote
-make deploy
-```
+3. **Deploy mã nguồn lên Cloudflare:**
+   ```bash
+   make deploy
+   ```
+   *Lưu ý:* Lệnh này sẽ chạy `pywrangler deploy` để tự động đóng gói (vendor) toàn bộ thư viện bên thứ ba (như `fastapi`, `pydantic`,...) và tải lên Cloudflare.
+
+---
+
+### 2. Triển khai tự động bằng Git Integration (Cloudflare Dashboard)
+
+Nếu bạn kết nối trực tiếp kho chứa GitHub với Cloudflare Workers để tự động build & deploy mỗi khi push code:
+
+1. **Thiết lập Secret:**
+   Vào **Cloudflare Dashboard** > **Workers & Pages** > Chọn Worker của bạn > **Settings** > **Variables** > Thêm một Secret mới tên là `ADMIN_TOKEN` với giá trị token của bạn.
+
+2. **Cấu hình Câu lệnh Build/Deploy (Bắt buộc):**
+   Mặc định Cloudflare sẽ chạy `npx wrangler deploy` (không đóng gói thư viện Python nên sẽ bị lỗi `ModuleNotFoundError: No module named 'fastapi'`). Bạn cần đổi cấu hình:
+   * Vào **Settings** > **Builds & deployments** > **Build settings**.
+   * Thay đổi **Build/Deploy command** thành:
+     ```bash
+     uv sync --extra dev && make deploy
+     ```
+
+3. **Chạy Migration:**
+   Khi deploy lần đầu hoặc khi có cập nhật database schema mới, bạn vẫn cần chạy lệnh sau từ máy cục bộ để cập nhật database D1:
+   ```bash
+   make db-migrate-remote
+   ```
 
 > Frontend integration uses `https://ndinhnguyen.pages.dev` and local
 > development uses `http://localhost:3000` via `ALLOWED_ORIGINS`.
