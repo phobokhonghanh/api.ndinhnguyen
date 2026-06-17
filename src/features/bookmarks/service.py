@@ -19,8 +19,21 @@ def slugify(name: str) -> str:
     return slug or str(uuid4())[:8]
 
 
-def build_tree(categories: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    nodes = {item["id"]: {**item, "children": []} for item in categories}
+def build_tree(categories: list[dict[str, Any]], bookmarks: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    bookmarks = bookmarks or []
+    bookmarks_by_category: dict[str, list[dict[str, Any]]] = {}
+    for bookmark in bookmarks:
+        cat_id = bookmark["categoryId"]
+        bookmarks_by_category.setdefault(cat_id, []).append(bookmark)
+
+    nodes = {
+        item["id"]: {
+            **item,
+            "bookmarks": bookmarks_by_category.get(item["id"], []),
+            "children": []
+        }
+        for item in categories
+    }
     roots: list[dict[str, Any]] = []
     for node in nodes.values():
         parent_id = node["parentId"]
@@ -97,9 +110,7 @@ async def dashboard(db: Any, query: str, category_id: str) -> dict[str, Any]:
         True,
         "ok",
         {
-            "bookmarks": bookmarks,
-            "categories": categories,
-            "categoryTree": build_tree(categories),
+            "categoryTree": build_tree(categories, bookmarks),
             "selectedCategoryIds": selected_ids,
             "dbReady": True,
         },
