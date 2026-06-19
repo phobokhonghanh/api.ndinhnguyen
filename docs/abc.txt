@@ -1,0 +1,17 @@
+features:
+    categories
+    - danh sách: hiển thị dưới dạng tree view (hiển thị danh sách category cha và danh sách category con trong category cha)
+        + tìm kiếm theo: name
+        + sắp xếp theo: ngày tạo, tên
+        + pagination và lazy load khi scroll (10 item per page) 
+    - quản lý
+        + thêm, xóa, sửa, cập nhật category
+    bookmarks 
+    - danh sách: danh sách các bookmark, có thể hiển thị dạng grid hoặc list
+        + tìm kiếm theo: category, name, url
+        + pagination và lazy load khi scroll (20 item per page)
+        + sắp xếp theo: ngày tạo, tên, url
+    - move bookmark từ category A sang category B
+    - quản lý:
+        + thêm, xóa, sửa, cập nhật bookmark
+

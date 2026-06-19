@@ -178,3 +178,156 @@ async def update_bookmark(
 
 async def delete_bookmark(db: Any, bookmark_id: str) -> None:
     await db.prepare("DELETE FROM bookmarks WHERE id = ?").bind(bookmark_id).run()
+
+
+async def count_categories(db: Any, query: str) -> int:
+    conditions: list[str] = []
+    values: list[Any] = []
+    if query:
+        conditions.append("name LIKE ?")
+        values.append(f"%{query}%")
+    else:
+        conditions.append("parent_id IS NULL")
+
+    where = f"WHERE {' AND '.join(conditions)}"
+    row = await first(
+        db.prepare(f"SELECT COUNT(*) AS total FROM categories {where}").bind(*values)
+    )
+    return row_value(row, "total") or 0
+
+
+async def list_categories_paginated(
+    db: Any,
+    query: str,
+    page: int,
+    page_size: int,
+    sort_by: str,
+    sort_order: str,
+) -> list[dict[str, Any]]:
+    sort_column = "created_at" if sort_by == "createdAt" else "name"
+    collate = " COLLATE NOCASE" if sort_column == "name" else ""
+    order = "DESC" if sort_order.upper() == "DESC" else "ASC"
+
+    conditions: list[str] = []
+    values: list[Any] = []
+    if query:
+        conditions.append("name LIKE ?")
+        values.append(f"%{query}%")
+    else:
+        conditions.append("parent_id IS NULL")
+
+    where = f"WHERE {' AND '.join(conditions)}"
+    offset = (page - 1) * page_size
+
+    id_rows = await rows(
+        db.prepare(
+            f"SELECT id FROM categories {where} ORDER BY {sort_column}{collate} {order} LIMIT ? OFFSET ?"
+        ).bind(*(values + [page_size, offset]))
+    )
+    category_ids = [row_value(row, "id") for row in id_rows]
+    if not category_ids:
+        return []
+
+    placeholders = ", ".join("?" for _ in category_ids)
+    result_rows = await rows(
+        db.prepare(
+            f"""WITH RECURSIVE category_tree(id, name, slug, color, parent_id, created_at) AS (
+                SELECT id, name, slug, color, parent_id, created_at
+                FROM categories
+                WHERE id IN ({placeholders})
+                
+                UNION ALL
+                
+                SELECT c.id, c.name, c.slug, c.color, c.parent_id, c.created_at
+                FROM categories c
+                INNER JOIN category_tree ct ON c.parent_id = ct.id
+            )
+            SELECT DISTINCT id, name, slug, color, parent_id, created_at FROM category_tree
+            ORDER BY parent_id IS NOT NULL, name COLLATE NOCASE ASC"""
+        ).bind(*category_ids)
+    )
+
+    return [_category(row) for row in result_rows]
+
+
+async def count_bookmarks(
+    db: Any, query: str, category_ids: list[str]
+) -> int:
+    conditions: list[str] = []
+    values: list[Any] = []
+    if query:
+        conditions.append(
+            "(bookmarks.title LIKE ? OR bookmarks.url LIKE ? "
+            "OR bookmarks.description LIKE ?)"
+        )
+        pattern = f"%{query}%"
+        values.extend([pattern, pattern, pattern])
+    if category_ids:
+        placeholders = ", ".join("?" for _ in category_ids)
+        conditions.append(f"bookmarks.category_id IN ({placeholders})")
+        values.extend(category_ids)
+
+    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    row = await first(
+        db.prepare(
+            f"""SELECT COUNT(*) AS total
+               FROM bookmarks
+               INNER JOIN categories ON categories.id = bookmarks.category_id
+               {where}"""
+        ).bind(*values)
+    )
+    return row_value(row, "total") or 0
+
+
+async def list_bookmarks_paginated(
+    db: Any,
+    query: str,
+    category_ids: list[str],
+    page: int,
+    page_size: int,
+    sort_by: str,
+    sort_order: str,
+) -> list[dict[str, Any]]:
+    if sort_by == "title":
+        sort_column = "bookmarks.title"
+    elif sort_by == "url":
+        sort_column = "bookmarks.url"
+    else:
+        sort_column = "bookmarks.created_at"
+
+    collate = " COLLATE NOCASE" if sort_column in {"bookmarks.title", "bookmarks.url"} else ""
+    order = "DESC" if sort_order.upper() == "DESC" else "ASC"
+
+    conditions: list[str] = []
+    values: list[Any] = []
+    if query:
+        conditions.append(
+            "(bookmarks.title LIKE ? OR bookmarks.url LIKE ? "
+            "OR bookmarks.description LIKE ?)"
+        )
+        pattern = f"%{query}%"
+        values.extend([pattern, pattern, pattern])
+    if category_ids:
+        placeholders = ", ".join("?" for _ in category_ids)
+        conditions.append(f"bookmarks.category_id IN ({placeholders})")
+        values.extend(category_ids)
+
+    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    offset = (page - 1) * page_size
+
+    statement = db.prepare(
+        f"""SELECT bookmarks.id, bookmarks.title, bookmarks.url,
+                   bookmarks.description, bookmarks.category_id,
+                   bookmarks.created_at, bookmarks.updated_at,
+                   categories.name AS category_name,
+                   categories.slug AS category_slug,
+                   categories.color AS category_color
+            FROM bookmarks
+            INNER JOIN categories ON categories.id = bookmarks.category_id
+            {where}
+            ORDER BY {sort_column}{collate} {order}
+            LIMIT ? OFFSET ?"""
+    )
+    statement = statement.bind(*(values + [page_size, offset]))
+    return [_bookmark(row) for row in await rows(statement)]
+

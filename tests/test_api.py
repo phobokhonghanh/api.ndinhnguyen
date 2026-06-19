@@ -37,13 +37,14 @@ class FakeR2Bucket:
 
 
 class EnvClient:
-    def __init__(self, bucket=None):
+    def __init__(self, bucket=None, environment="production"):
         self.bucket = bucket or FakeR2Bucket()
         self.env = SimpleNamespace(
             ADMIN_TOKEN="secret",
             ALLOWED_ORIGINS="https://frontend.pages.dev,http://localhost:3000",
             DB=None,
             STATS_BUCKET=self.bucket,
+            ENVIRONMENT=environment,
         )
 
     def __enter__(self):
@@ -256,3 +257,19 @@ def test_stats_storage_exception_returns_500():
 
     assert response.status_code == 500
     assert response.json() == {"ok": False, "code": "stats_storage_error"}
+
+
+@pytest.mark.parametrize("path", ["/docs", "/redoc", "/openapi.json", "/docs/oauth2-redirect"])
+def test_docs_blocked_in_production(path):
+    with EnvClient(environment="production") as client:
+        response = client.get(path)
+    assert response.status_code == 404
+    assert response.json() == {"ok": False, "code": "not_found"}
+
+
+@pytest.mark.parametrize("path", ["/docs", "/redoc", "/openapi.json"])
+def test_docs_allowed_in_development(path):
+    with EnvClient(environment="development") as client:
+        response = client.get(path)
+    assert response.status_code == 200
+

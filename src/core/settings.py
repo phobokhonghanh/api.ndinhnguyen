@@ -11,6 +11,7 @@ def env_value(env: Any, key: str, default: str = "") -> str:
 class AppSettings:
     admin_token: str = ""
     allowed_origins: frozenset[str] = frozenset()
+    environment: str = "production"
 
     @classmethod
     def from_env(cls, env: Any) -> "AppSettings":
@@ -22,4 +23,5 @@ class AppSettings:
         return cls(
             admin_token=env_value(env, "ADMIN_TOKEN"),
             allowed_origins=frozenset(origins),
+            environment=env_value(env, "ENVIRONMENT", "production"),
         )

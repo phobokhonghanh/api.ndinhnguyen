@@ -20,16 +20,9 @@ def slugify(name: str) -> str:
 
 
 def build_tree(categories: list[dict[str, Any]], bookmarks: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
-    bookmarks = bookmarks or []
-    bookmarks_by_category: dict[str, list[dict[str, Any]]] = {}
-    for bookmark in bookmarks:
-        cat_id = bookmark["categoryId"]
-        bookmarks_by_category.setdefault(cat_id, []).append(bookmark)
-
     nodes = {
         item["id"]: {
             **item,
-            "bookmarks": bookmarks_by_category.get(item["id"], []),
             "children": []
         }
         for item in categories
@@ -90,31 +83,75 @@ def normalize_category(data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def dashboard(db: Any, query: str, category_id: str) -> dict[str, Any]:
-    if category_id:
-        categories, all_bookmarks = await asyncio.gather(
-            repository.list_categories(db),
-            repository.list_bookmarks(db, query.strip(), [])
-        )
-        selected_ids = descendant_ids(categories, category_id)
-        selected_set = set(selected_ids)
-        bookmarks = [b for b in all_bookmarks if b["categoryId"] in selected_set]
-    else:
-        categories, bookmarks = await asyncio.gather(
-            repository.list_categories(db),
-            repository.list_bookmarks(db, query.strip(), [])
-        )
-        selected_ids = []
+async def get_categories_dashboard(
+    db: Any,
+    query: str,
+    page: int = 1,
+    page_size: int = 10,
+    sort_by: str = "name",
+    sort_order: str = "asc",
+) -> dict[str, Any]:
+    total = await repository.count_categories(db, query)
+    import math
+    total_pages = math.ceil(total / page_size) if total > 0 else 0
+
+    categories = await repository.list_categories_paginated(
+        db, query, page, page_size, sort_by, sort_order
+    )
+
+    tree = build_tree(categories)
 
     return response(
         True,
         "ok",
         {
-            "categoryTree": build_tree(categories, bookmarks),
-            "selectedCategoryIds": selected_ids,
-            "dbReady": True,
+            "categoryTree": tree,
+            "pagination": {
+                "total": total,
+                "page": page,
+                "pageSize": page_size,
+                "totalPages": total_pages,
+            },
         },
     )
+
+
+async def get_bookmarks_dashboard(
+    db: Any,
+    query: str,
+    category_id: str = "",
+    page: int = 1,
+    page_size: int = 20,
+    sort_by: str = "createdAt",
+    sort_order: str = "desc",
+) -> dict[str, Any]:
+    category_ids = []
+    if category_id:
+        categories = await repository.list_categories(db)
+        category_ids = descendant_ids(categories, category_id)
+
+    total = await repository.count_bookmarks(db, query.strip(), category_ids)
+    import math
+    total_pages = math.ceil(total / page_size) if total > 0 else 0
+
+    bookmarks = await repository.list_bookmarks_paginated(
+        db, query.strip(), category_ids, page, page_size, sort_by, sort_order
+    )
+
+    return response(
+        True,
+        "ok",
+        {
+            "bookmarks": bookmarks,
+            "pagination": {
+                "total": total,
+                "page": page,
+                "pageSize": page_size,
+                "totalPages": total_pages,
+            },
+        },
+    )
+
 
 
 async def save_bookmark(

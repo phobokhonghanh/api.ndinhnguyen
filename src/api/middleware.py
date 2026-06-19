@@ -20,6 +20,12 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
     if origin and origin not in settings.allowed_origins:
         return json_response(response(False, "origin_not_allowed"), 403)
 
+    path = request.url.path
+    if settings.environment == "production" and (
+        path in {"/openapi.json", "/redoc", "/docs"} or path.startswith("/docs/")
+    ):
+        return json_response(response(False, "not_found"), 404)
+
     if request.method == "OPTIONS":
         api_response = json_response(response(True, "ok"))
     elif request.url.path.startswith("/api/") and request.url.path not in PUBLIC_API_PATHS:

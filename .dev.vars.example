@@ -2,3 +2,4 @@ ADMIN_TOKEN=replace-me
 ALLOWED_ORIGINS=http://localhost:3000,https://your-project.pages.dev
 STATS_SNAPSHOT_PATH_TEMPLATE={product}/snapshot/loaddate={yyyymmdd}/{machine_id}.csv
 STATS_RUNTIME_PATH_TEMPLATE={product}/runtime/loaddate={yyyymmdd}/{machine_id}_{batch_id}.jsonl
+ENVIRONMENT=development

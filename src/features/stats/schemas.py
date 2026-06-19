@@ -18,3 +18,13 @@ class StatsCommand:
     @property
     def current_time(self) -> datetime:
         return self.now or datetime.now(UTC)
+
+
+from pydantic import BaseModel
+
+
+class StatsResponse(BaseModel):
+    status: str
+    snapshot: bool
+    runtime: bool
+

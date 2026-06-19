@@ -4,14 +4,14 @@ from fastapi.responses import JSONResponse
 from core.context import worker_env
 from core.responses import json_response, response
 from features.stats.errors import StatsStorageError, StatsValidationError
-from features.stats.schemas import StatsCommand
+from features.stats.schemas import StatsCommand, StatsResponse
 from features.stats.service import StatsService
 
 
 router = APIRouter()
 
 
-@router.post("/api/stats")
+@router.post("/api/stats", response_model=StatsResponse)
 async def create_stats(
     product: str,
     machine_id: str,
