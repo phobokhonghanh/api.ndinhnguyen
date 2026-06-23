@@ -9,7 +9,7 @@ from core.responses import json_response, response
 from core.settings import AppSettings
 
 
-PUBLIC_API_PATHS = {"/api/stats"}
+PUBLIC_API_PATHS = {"/api/stats", "/api/shopee/affiliate"}
 
 
 async def security_middleware(request: Request, call_next: Any) -> JSONResponse:

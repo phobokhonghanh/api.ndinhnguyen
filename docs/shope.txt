@@ -1,0 +1,55 @@
+link shope có format như sau:
+https://s.shopee.vn/an_redir?
+    + origin_link=https://shopee.vn/product/{item_id}/{shop_id}&
+    + affiliate_id={affiliate_id}&
+    + sub_id={sub_id}&
+    + deep_and_deferred={deep_and_deferred}
+
+
+1. Hàm lấy item_id và shop_id từ link shopee
+- input:
+    + string - link: https://shopee.vn/Qu%E1%BA%A7n-su%C3%B4ng-basic-nam-%E1%BB%91ng-r%E1%BB%99ng-ch%E1%BA%A5t-kaki-xu%E1%BA%A5t-H%C3%A0n-c%E1%BB%B1c-%C4%91%E1%BA%B9p-Qu%E1%BA%A7n-l%C6%B0ng-thun-co-gi%C3%A3n-3-m%C3%A0u-t%C3%B4n-d%C3%A1ng-phong-c%C3%A1ch-H%C3%A0n-Qu%E1%BB%91c-i.187103490.12884203570?extraParams=%7B%22display_model_id%22%3A124900595363%2C%22model_selection_logic%22%3Anull%7D
+    (trong input này có đoạn -i.187103490.12884203570?extraParams tương đương với format -i.{item_id}.{shop_id}?extraParams={extraParams} ở link)
+- output:
+    + string - item_id: 187103490
+    + string - shop_id: 12884203570
+
+Ví dụ: 
+- Input: 
+    + link = https://shopee.vn/Qu%E1%BA%A7n-su%C3%B4ng-basic-nam-%E1%BB%91ng-r%E1%BB%99ng-ch%E1%BA%A5t-kaki-xu%E1%BA%A5t-H%C3%A0n-c%E1%BB%B1c-%C4%91%E1%BA%B9p-Qu%E1%BA%A7n-l%C6%B0ng-thun-co-gi%C3%A3n-3-m%C3%A0u-t%C3%B4n-d%C3%A1ng-phong-c%C3%A1ch-H%C3%A0n-Qu%E1%BB%91c-i.187103490.12884203570?extraParams=%7B%22display_model_id%22%3A124900595363%2C%22model_selection_logic%22%3Anull%7D
+- Output: item_id = 187103490, shop_id = 12884203570
+
+2. Hàm tạo link shopee affiliate
+- input đầu vào là:
+    + string - item_id
+    + string - shop_id
+    + string - affiliate_id
+    + array string - [sub_id01,sub_id02,sub_id03,sub_id04,sub_id05]
+    + int - deep_and_deferred (default = 1)
+- output là:
+    https://s.shopee.vn/an_redir?origin_link=https://shopee.vn/product/{item_id}/{shop_id}&affiliate_id={affiliate_id}&sub_id={sub_id01-subid02-subid03-subid04-subid05}&deep_and_deferred={deep_and_deferred}
+
+Ví dụ: 
+Input: 
++ item_id = 187103490
++ shop_id = 12884203570
++ affiliate_id = 17314780502
++ sub_id = [localhost01,tiktok02,youtube03,facebook04,instagram05]
++ deep_and_deferred = 1
+
+Output: 
+https://s.shopee.vn/an_redir?origin_link=https://shopee.vn/product/187103490/12884203570&affiliate_id=17314780502&sub_id=localhost01-tiktok02-youtube03-facebook04-instagram05&deep_and_deferred=1
+
+3. Hàm lấy thông tin sản phẩm shopee
+- Input: 
+    + item_id = 187103490
+    + shop_id = 12884203570
+- logic:
+    + nối chuỗi url = https://shopee.vn/product/{item_id}/{shop_id}
+    + request đến endpoint https://data.addlivetag.com/product-data/product-data.php?url={url}
+        check status code
+        nếu code == 200
+            check status == 'success', trong productInfo bắt buộc phải có thông tin (!=null): productName, price
+                get tất cả thông tin trong productInfo
+                return productInfo
+        return null
