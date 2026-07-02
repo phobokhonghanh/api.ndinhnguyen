@@ -22,6 +22,10 @@ async def create_stats(
     batch_id: str | None = None,
     file: UploadFile | None = File(None),
 ) -> JSONResponse:
+    """
+    Handles stats collection upload (snapshots and/or runtime logs) for various product versions and machines.
+    """
+
     command = StatsCommand(
         product=product,
         machine_id=machine_id,

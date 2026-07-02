@@ -1,0 +1,184 @@
+curl --location 'https://affiliate.shopee.vn/api/v3/report/list?page_size=20&page_num=1&sub_id=ndinhnguyen&purchase_time_s=1782320400&purchase_time_e=1782406799&version=1' \
+--header 'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:152.0) Gecko/20100101 Firefox/152.0' \
+--header 'Accept: application/json, text/plain, */*' \
+--header 'Accept-Language: en-US,en;q=0.9' \
+--header 'Accept-Encoding: gzip, deflate, br, zstd' \
+--header 'Referer: https://affiliate.shopee.vn/report/conversion_report' \
+--header 'Affiliate-Program-Type: 1' \
+--header 'Sec-Fetch-Dest: empty' \
+--header 'Sec-Fetch-Mode: cors' \
+--header 'Sec-Fetch-Site: same-origin' \
+--header 'Connection: keep-alive' \
+--header 'Cookie: XXX' \
+--header 'Priority: u=0'
+
+response =>
+
+{
+    "code": 0,
+    "msg": "success",
+    "data": {
+        "page_num": 1,
+        "page_size": 20,
+        "total_count": 1,
+        "list": [
+            {
+                "purchase_time": 1782402700,
+                "checkout_id": "236101900266795",
+                "checkout_status": "Pending",
+                "checkout_status_app": 0,
+                "checkout_cap": 4000000000,
+                "conversion_status": 1,
+                "checkout_complete_time": 0,
+                "affiliate_id": 17314780502,
+                "affiliate_name": "nguyendeptrai113",
+                "user_status": "Existing",
+                "ua_type": 1,
+                "gross_commission": 3287296000,
+                "capped_commission": 3287296000,
+                "total_brand_commission": 0,
+                "estimated_total_commission_with_mcn": 3287296000,
+                "estimated_total_commission": 3287296000,
+                "utm_content": "ndinhnguyen",
+                "device": "App",
+                "referrer": "{\"internal_source\":\"\",\"direct_source\":\"other website\",\"indirect_source\":\"\",\"first_external_source\":\"\",\"last_external_source\":\"Websites\"}",
+                "orders": [
+                    {
+                        "order_sn": "2606252XVUN623",
+                        "order_id": "236101900261443",
+                        "order_status": "PAID",
+                        "shop_type": 3,
+                        "cancel_reason": "",
+                        "display_order_status": 1,
+                        "complete_time": 0,
+                        "fraud_complete_time": 1782434734,
+                        "affiliate_transaction_id": "102161010101005891",
+                        "shopee_order_status": 1,
+                        "ams_order_billing_order_cap": 0,
+                        "is_ams_order_billing_order_capped": false,
+                        "is_fixed_fee": false,
+                        "items": [
+                            {
+                                "item_status": "UNRATED",
+                                "display_item_status": "Pending",
+                                "affiliate_item_status": 1,
+                                "shop_id": 12501250,
+                                "shop_name": "3T Mart - since 2015",
+                                "promotion_id": "",
+                                "model_id": "415049760901",
+                                "item_id": 47500573776,
+                                "item_name": "Bộ vòi xịt vệ sinh INOX 304 cao cấp C'MON VX-02-I (dây inox)",
+                                "item_price": 26900000000,
+                                "actual_amount": 82182400000,
+                                "refunded_amount": 0,
+                                "qty": 5,
+                                "img_code": "vn-11134207-820l4-migsdvcnneh0b6",
+                                "item_commission": 3287296000,
+                                "capped_brand_commission": 0,
+                                "global_category_lv1_id": 100636,
+                                "global_category_lv2_id": 100709,
+                                "global_category_lv3_id": 101137,
+                                "global_category_lv1_name": "Nhà cửa & Đời sống",
+                                "global_category_lv2_name": "Đồ dùng phòng tắm",
+                                "global_category_lv3_name": "Vòi sen & vòi xịt vệ sinh",
+                                "is_fraud": 0,
+                                "fraud_reason": "",
+                                "fraud_status": 2,
+                                "brand_commission_rate": 0,
+                                "platform_commission_rate": 4000,
+                                "attribution_type": 1,
+                                "channel": 1,
+                                "campaign_mcn_brand_gross_commission": "0",
+                                "campaign_type": 3,
+                                "ams_order_billing_rate": 0,
+                                "brand_origin_commission_rate": 0,
+                                "campaign_mcn_origin_commission_rate": 0,
+                                "platform_calculation_type": 1,
+                                "platform_commission_campaign_source": 1
+                            }
+                        ]
+                    }
+                ],
+                "click_time": 1782398163,
+                "click_id": "a56b1c935a3215e2e8f8773ec5af00f0",
+                "product_type": "mp",
+                "internal_source": "",
+                "indirect_source": "",
+                "direct_source": "other website",
+                "last_external_source": "Websites",
+                "first_external_source": "",
+                "is_shopee_capped": false,
+                "attribution_type": 2,
+                "estimated_validation_month": "",
+                "report_payment_validation_info": {
+                    "validation_cycle": 0,
+                    "estimate_validation_month": "",
+                    "estimate_validation_isoweek": 0,
+                    "order_estimate_validation_period_start": 0,
+                    "order_estimate_validation_period_end": 0
+                },
+                "affiliate_net_commission": "3287296000",
+                "mcn_management_fee_commission": "0",
+                "mcn_agreement_id": "0",
+                "campaign_mcn_id": "0",
+                "campaign_mcn_name": "",
+                "linked_mcn_id": "0",
+                "linked_mcn_name": "",
+                "linked_mcn_commission_rate": "0",
+                "tenant": 1,
+                "app_type": 1,
+                "traffic_type": 0
+            }
+        ]
+    }
+}
+
+
+=> Lấy các thông tin từ response trên:
+lấy các thông tin sau:
+
+page_num
+page_size
+total_count
+
+purchase_time
+checkout_id
+checkout_status
+checkout_status_app
+checkout_complete_time
+
+affiliate_id
+affiliate_name
+
+affiliate_net_commission
+
+utm_content
+device
+
+orders
+    order_id
+    order_status
+    display_order_status
+    complete_time
+    fraud_complete_time
+
+    items
+        display_item_status
+        affiliate_item_status
+
+        shop_id
+        shop_name
+
+        item_id
+        item_name
+        item_price
+        item_commission
+        img_code
+        actual_amount
+        qty
+
+        is_fraud
+        fraud_reason
+        fraud_status
+        
+        platform_commission_rate

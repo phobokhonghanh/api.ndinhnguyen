@@ -26,5 +26,11 @@ def test_app_settings_parses_allowed_origins():
     )
 
 
-def test_stats_and_shopee_are_the_only_public_api_paths():
-    assert PUBLIC_API_PATHS == {"/api/stats", "/api/shopee/affiliate"}
+def test_public_api_paths():
+    assert PUBLIC_API_PATHS == {
+        "/api/stats",
+        "/api/shopee/affiliate",
+        "/api/auth/google/login",
+        "/api/auth/google/logout",
+    }
+

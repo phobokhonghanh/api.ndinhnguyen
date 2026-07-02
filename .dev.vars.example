@@ -3,3 +3,8 @@ ALLOWED_ORIGINS=http://localhost:3000,https://your-project.pages.dev
 STATS_SNAPSHOT_PATH_TEMPLATE={product}/snapshot/loaddate={yyyymmdd}/{machine_id}.csv
 STATS_RUNTIME_PATH_TEMPLATE={product}/runtime/loaddate={yyyymmdd}/{machine_id}_{batch_id}.jsonl
 ENVIRONMENT=development
+
+# Google Auth & Session Configurations
+JWT_SECRET=replace-me-with-a-secure-secret-key-at-least-32-chars
+GOOGLE_CLIENT_ID=replace-me-with-your-google-oauth-client-id.apps.googleusercontent.com
+ADMIN_EMAIL=your-email-address@gmail.com

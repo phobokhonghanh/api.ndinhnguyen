@@ -7,7 +7,7 @@ pytest.importorskip("httpx")
 from fastapi.testclient import TestClient
 
 from app import app
-from context import worker_env
+from core.context import worker_env
 
 
 class FakeR2Object:

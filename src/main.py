@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from api.middleware import security_middleware
-from api.routes import bookmarks, categories, health, stats, shopee
+from api.routes import bookmarks, categories, health, stats, shopee, auth
 
 
 def create_app() -> FastAPI:
@@ -17,7 +17,7 @@ def create_app() -> FastAPI:
     app.include_router(bookmarks.router)
     app.include_router(categories.router)
     app.include_router(shopee.router)
+    app.include_router(auth.router)
     return app
-
 
 app = create_app()

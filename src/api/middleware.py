@@ -9,7 +9,12 @@ from core.responses import json_response, response
 from core.settings import AppSettings
 
 
-PUBLIC_API_PATHS = {"/api/stats", "/api/shopee/affiliate"}
+PUBLIC_API_PATHS = {
+    "/api/stats",
+    "/api/shopee/affiliate",
+    "/api/auth/google/login",
+    "/api/auth/google/logout",
+}
 
 
 async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
@@ -31,14 +36,33 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
     elif request.url.path.startswith("/api/") and request.url.path not in PUBLIC_API_PATHS:
         authorization = request.headers.get("authorization", "")
         supplied = authorization.removeprefix("Bearer ").strip()
-        if not settings.admin_token:
-            api_response = json_response(response(False, "auth_missing_config"), 500)
-        elif not supplied or not hmac.compare_digest(supplied, settings.admin_token):
+        
+        authorized = False
+        is_forbidden = False
+
+        if supplied:
+            # 1. Try static admin token if configured
+            if settings.admin_token and hmac.compare_digest(supplied, settings.admin_token):
+                authorized = True
+            # 2. Try verifying as JWT session token
+            elif settings.jwt_secret:
+                from core.auth import verify_jwt
+                payload = verify_jwt(supplied, settings.jwt_secret)
+                if payload:
+                    if payload.get("role") == "admin":
+                        authorized = True
+                    else:
+                        is_forbidden = True
+
+        if is_forbidden:
+            api_response = json_response(response(False, "auth_forbidden"), 403)
+        elif not authorized:
             api_response = json_response(response(False, "auth_invalid"), 401)
         else:
             api_response = await call_next(request)
     else:
         api_response = await call_next(request)
+
 
     if origin and origin in settings.allowed_origins:
         api_response.headers["Access-Control-Allow-Origin"] = origin

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
+from api.helpers import get_model_data
 from core.responses import json_response, response
 from features.shopee import service
 from features.shopee.schemas import AffiliateRequest, AffiliateResponseEnvelope, AffiliateResponseData
@@ -10,6 +11,9 @@ router = APIRouter()
 
 @router.post("/api/shopee/affiliate", response_model=AffiliateResponseEnvelope)
 async def create_shopee_affiliate(payload: AffiliateRequest) -> JSONResponse:
+    """
+    Parses a Shopee product link, fetches its metadata, and converts it to a formatted affiliate link.
+    """
     # 1. Fetch product info
     product = await service.fetch_prod_alt_by_link(payload.link)
 
@@ -41,13 +45,11 @@ async def create_shopee_affiliate(payload: AffiliateRequest) -> JSONResponse:
         product=product
     )
 
-    if hasattr(res_data, "model_dump"):
-        data_dict = res_data.model_dump(by_alias=True)
-    else:
-        data_dict = res_data.dict(by_alias=True)
+    data_dict = get_model_data(res_data, by_alias=True)
 
     # 6. Return response
     return json_response(
         response(True, "ok", data_dict),
         200
     )
+

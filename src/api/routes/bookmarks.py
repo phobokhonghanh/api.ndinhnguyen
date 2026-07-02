@@ -1,38 +1,14 @@
-from typing import Any, Literal
+from typing import Literal
 
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
-from core.context import worker_env
-from core.responses import json_response, response
+from api.helpers import get_model_data, run_db_operation
 from features.bookmarks import service
 from features.bookmarks.schemas import BookmarkInput, PaginatedBookmarksResponse, ApiResponse
 
 
 router = APIRouter()
-
-
-def _db() -> Any:
-    env = worker_env.get(None)
-    return getattr(env, "DB", None)
-
-
-def _model_data(model: Any) -> dict[str, Any]:
-    if hasattr(model, "model_dump"):
-        return model.model_dump()
-    return model.dict()
-
-
-async def _run(operation: Any) -> JSONResponse:
-    db = _db()
-    if db is None:
-        return json_response(response(False, "db_unavailable"), 503)
-    try:
-        result = await operation(db)
-        return json_response(result, 200 if result["ok"] else 400)
-    except Exception as e:
-        print(f"Exception in bookmarks operation: {e}")
-        return json_response(response(False, "unknown_error"), 500)
 
 
 @router.get("/api/bookmarks", response_model=PaginatedBookmarksResponse)
@@ -44,27 +20,48 @@ async def get_bookmarks(
     sortBy: Literal["createdAt", "title", "url"] = Query("createdAt", description="Field to sort bookmarks by"),
     sortOrder: Literal["asc", "desc"] = Query("desc", description="Sort order direction"),
 ) -> JSONResponse:
-    return await _run(
+    """
+    Retrieves a paginated list of bookmarks, optionally filtered by category and search query.
+    """
+    return await run_db_operation(
         lambda db: service.get_bookmarks_dashboard(
             db, q, categoryId, page, pageSize, sortBy, sortOrder
-        )
+        ),
+        "bookmarks"
     )
 
 
 @router.post("/api/bookmarks", response_model=ApiResponse)
 async def create_bookmark(payload: BookmarkInput) -> JSONResponse:
-    return await _run(lambda db: service.save_bookmark(db, _model_data(payload)))
+    """
+    Creates a new bookmark.
+    """
+    return await run_db_operation(
+        lambda db: service.save_bookmark(db, get_model_data(payload)),
+        "bookmarks"
+    )
 
 
 @router.put("/api/bookmarks/{bookmark_id}", response_model=ApiResponse)
 async def update_bookmark(
     bookmark_id: str, payload: BookmarkInput
 ) -> JSONResponse:
-    return await _run(
-        lambda db: service.save_bookmark(db, _model_data(payload), bookmark_id)
+    """
+    Updates an existing bookmark by ID.
+    """
+    return await run_db_operation(
+        lambda db: service.save_bookmark(db, get_model_data(payload), bookmark_id),
+        "bookmarks"
     )
 
 
 @router.delete("/api/bookmarks/{bookmark_id}", response_model=ApiResponse)
 async def delete_bookmark(bookmark_id: str) -> JSONResponse:
-    return await _run(lambda db: service.remove_bookmark(db, bookmark_id))
+    """
+    Deletes a bookmark by ID.
+    """
+    return await run_db_operation(
+        lambda db: service.remove_bookmark(db, bookmark_id),
+        "bookmarks"
+    )
+

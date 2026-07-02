@@ -2,7 +2,7 @@ import asgi
 from workers import WorkerEntrypoint
 
 from app import app
-from context import worker_env
+from core.context import worker_env
 
 
 class Default(WorkerEntrypoint):

@@ -1,6 +1,7 @@
-import json
 import re
 from typing import Any
+from core.constants import SHOPEE_AFFILIATE_REDIRECT_TEMPLATE, SHOPEE_PRODUCT_DATA_URL_TEMPLATE
+from infra.http import fetch_json
 from features.shopee.schemas import Product
 
 
@@ -35,29 +36,19 @@ def create_affiliate_link(
     sliced_sub_ids = sub_ids[:5]
     joined_sub_ids = "-".join(sliced_sub_ids)
     
-    return (
-        f"https://s.shopee.vn/an_redir"
-        f"?origin_link=https://shopee.vn/product/{item_id}/{shop_id}"
-        f"&affiliate_id={affiliate_id}"
-        f"&sub_id={joined_sub_ids}"
-        f"&deep_and_deferred={deep_and_deferred}"
+    return SHOPEE_AFFILIATE_REDIRECT_TEMPLATE.format(
+        item_id=item_id,
+        shop_id=shop_id,
+        affiliate_id=affiliate_id,
+        sub_id=joined_sub_ids,
+        deep_and_deferred=deep_and_deferred
     )
 
 
 async def fetch_prod_alt_by_link(link: str) -> Product | None:
-    url = f"https://data.addlivetag.com/product-data/product-data.php?url={link}"
+    url = SHOPEE_PRODUCT_DATA_URL_TEMPLATE.format(link=link)
     try:
-        # pyrefly: ignore [missing-import]
-        from js import fetch
-    except ImportError:
-        return None
-
-    try:
-        response = await fetch(url)
-        if response.status != 200:
-            return None
-        text = await response.text()
-        data = json.loads(text)
+        data = await fetch_json(url)
         if data.get("status") == "success" and data.get("productInfo") is not None:
             prod_info = data["productInfo"]
             # ProductName and price must be present and not null
@@ -67,3 +58,4 @@ async def fetch_prod_alt_by_link(link: str) -> Product | None:
     except Exception as e:
         print(f"Error fetching product data: {e}")
     return None
+
