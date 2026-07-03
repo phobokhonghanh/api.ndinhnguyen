@@ -1,0 +1,12 @@
+feat: tạo link affiliate (đã thực hiện)
+- link affiliate sẽ có danh sách sub id được nhận từ client, với format subid1-subid2
+- subid1 sẽ là mặc định ndinhnguyen (tên trang web)
+- subid2 sẽ là id khi người dùng đăng nhập bằng google
+feat: lấy thông tin chuyển đổi:
+- khi user click và mua hàng từ link affiliate được tạo ra thì sub id trong báo cáo chuyển đổi sẽ có format subid1-subid2
+  + sau đó tôi sẽ dùng shope_covert đã được hiện thực trước đó và tìm kiếm theo subid theo subid1-subid2 để lấy được danh sách đơn hàng đã mua theo subid1-subid2
+feat: cashback:
+- sau khi lấy được danh sách chuyển đổi thì tôi sẽ check trạng thái đơn hàng đã được hoàn thành chưa và trạng thái hoàn tiền từ shopee
+- nếu đã hoàn tiền từ shopee thì tôi cần phải tính toán theo phần thường dựa trên commision để chia lại với người dùng 50%
+
+Hiện tại tạo link, lấy thông tin chuyển đổi đã được hiện thực, phần cashback chưa thực hiện, hãy tiếp tục thực hiện phần cashback này

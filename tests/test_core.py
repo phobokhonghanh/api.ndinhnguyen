@@ -30,6 +30,7 @@ def test_public_api_paths():
     assert PUBLIC_API_PATHS == {
         "/api/stats",
         "/api/shopee/affiliate",
+        "/api/shopee/conversions",
         "/api/auth/google/login",
         "/api/auth/google/logout",
     }

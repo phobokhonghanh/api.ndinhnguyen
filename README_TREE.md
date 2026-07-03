@@ -65,9 +65,9 @@ Dưới đây là sơ đồ cây thư mục chi tiết của dự án **api.ndin
         │   ├── repository.py  # Truy vấn cơ sở dữ liệu D1 cho bookmark & category
         │   ├── schemas.py     # Schema Pydantic cho dữ liệu đầu vào/đầu ra của bookmark & category
         │   └── service.py     # Xử lý nghiệp vụ phân trang, xây dựng cây danh mục (build tree)
-        ├── shopee/         # Nghiệp vụ Shopee Affiliate
-        │   ├── schemas.py     # Định nghĩa schema request & response tạo link affiliate
-        │   └── service.py     # Logic bóc tách mã sản phẩm/cửa hàng và tạo link affiliate
+        ├── shopee/         # Tích hợp Shopee Affiliate
+        │   ├── schemas.py     # Cấu trúc request link aff, thông tin sản phẩm và báo cáo chuyển đổi (conversions)
+        │   └── service.py     # Trích xuất thông tin sản phẩm, sinh link affiliate và truy vấn báo cáo từ Shopee API
         ├── stats/          # Nghiệp vụ telemetry / ghi nhận trạng thái
         │   ├── constants.py   # Các tham số cấu hình tĩnh cho telemetry (giới hạn file, kích thước)
         │   ├── errors.py      # Định nghĩa các ngoại lệ (ValidationError, StorageError) cho stats

@@ -14,3 +14,4 @@ SHOPEE_AFFILIATE_REDIRECT_TEMPLATE = (
     "&sub_id={sub_id}"
     "&deep_and_deferred={deep_and_deferred}"
 )
+SHOPEE_REPORT_LIST_URL = "https://affiliate.shopee.vn/api/v3/report/list"

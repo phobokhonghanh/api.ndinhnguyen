@@ -15,6 +15,7 @@ class AppSettings:
     jwt_secret: str = ""
     google_client_id: str = ""
     admin_email: str = ""
+    shopee_cookie: str = ""
 
     @classmethod
     def from_env(cls, env: Any) -> "AppSettings":
@@ -30,4 +31,5 @@ class AppSettings:
             jwt_secret=env_value(env, "JWT_SECRET"),
             google_client_id=env_value(env, "GOOGLE_CLIENT_ID"),
             admin_email=env_value(env, "ADMIN_EMAIL"),
+            shopee_cookie=env_value(env, "SHOPEE_COOKIE"),
         )

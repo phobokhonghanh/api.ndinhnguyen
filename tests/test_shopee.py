@@ -194,3 +194,154 @@ def test_api_shopee_affiliate_no_auth():
     assert res_json["ok"] is True
     assert "affiliate_link" in res_json["data"]
 
+
+def test_fetch_conversion_reports_cookie_missing():
+    from core.context import worker_env
+    from types import SimpleNamespace
+    token = worker_env.set(SimpleNamespace(SHOPEE_COOKIE=""))
+    try:
+        result = asyncio.run(
+            service.fetch_conversion_reports()
+        )
+    finally:
+        worker_env.reset(token)
+    assert result["ok"] is False
+    assert result["code"] == "shopee_cookie_missing"
+
+
+def test_fetch_conversion_reports_success():
+    from core.context import worker_env
+    from types import SimpleNamespace
+    token = worker_env.set(SimpleNamespace(SHOPEE_COOKIE="test_cookie"))
+    fake_report = {
+        "code": 0,
+        "msg": "success",
+        "data": {
+            "page_num": 1,
+            "page_size": 20,
+            "total_count": 1,
+            "list": [
+                {
+                    "purchase_time": 1782402700,
+                    "checkout_id": "236101900266795",
+                    "checkout_status": "Pending",
+                    "checkout_status_app": 0,
+                    "checkout_complete_time": 0,
+                    "affiliate_id": 17314780502,
+                    "affiliate_name": "nguyendeptrai113",
+                    "affiliate_net_commission": "3287296000",
+                    "utm_content": "ndinhnguyen",
+                    "device": "App",
+                    "orders": [
+                        {
+                            "order_id": "236101900261443",
+                            "order_status": "PAID",
+                            "display_order_status": 1,
+                            "complete_time": 0,
+                            "fraud_complete_time": 1782434734,
+                            "items": [
+                                {
+                                    "display_item_status": "Pending",
+                                    "affiliate_item_status": 1,
+                                    "shop_id": 12501250,
+                                    "shop_name": "3T Mart",
+                                    "item_id": 47500573776,
+                                    "item_name": "Bộ vòi xịt",
+                                    "item_price": 26900000000,
+                                    "item_commission": 3287296000,
+                                    "img_code": "img123",
+                                    "actual_amount": 82182400000,
+                                    "qty": 5,
+                                    "is_fraud": 0,
+                                    "fraud_reason": "",
+                                    "fraud_status": 2,
+                                    "platform_commission_rate": 4000,
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
+        },
+    }
+    fake_fetch.return_value = MockJSResponse(200, json.dumps(fake_report))
+    
+    try:
+        result = asyncio.run(
+            service.fetch_conversion_reports(page_size=20, page_num=1)
+        )
+    finally:
+        worker_env.reset(token)
+    assert result["ok"] is True
+    assert result["data"]["page_num"] == 1
+    assert result["data"]["list"][0]["checkout_id"] == "236101900266795"
+    assert result["data"]["list"][0]["orders"][0]["items"][0]["item_name"] == "Bộ vòi xịt"
+
+
+def test_api_shopee_conversions_unauthenticated():
+    with EnvClient() as client:
+        response = client.get("/api/shopee/conversions")
+    assert response.status_code == 401
+    assert response.json()["code"] == "auth_required"
+
+
+def test_api_shopee_conversions_admin_success():
+    from core.auth import generate_jwt
+    fake_report = {
+        "code": 0,
+        "msg": "success",
+        "data": {
+            "page_num": 1,
+            "page_size": 20,
+            "total_count": 0,
+            "list": [],
+        },
+    }
+    fake_fetch.return_value = MockJSResponse(200, json.dumps(fake_report))
+
+    env_client = EnvClient()
+    env_client.env.JWT_SECRET = "test_jwt_secret"
+    env_client.env.SHOPEE_COOKIE = "test_cookie"
+    with env_client as client:
+        token = generate_jwt({"sub": "admin_user", "role": "admin"}, "test_jwt_secret")
+        
+        response = client.get(
+            "/api/shopee/conversions?sub_id=some_user",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+
+
+def test_api_shopee_conversions_user_success():
+    from core.auth import generate_jwt
+    fake_report = {
+        "code": 0,
+        "msg": "success",
+        "data": {
+            "page_num": 1,
+            "page_size": 20,
+            "total_count": 0,
+            "list": [],
+        },
+    }
+    fake_fetch.return_value = MockJSResponse(200, json.dumps(fake_report))
+
+    env_client = EnvClient()
+    env_client.env.JWT_SECRET = "test_jwt_secret"
+    env_client.env.SHOPEE_COOKIE = "test_cookie"
+    with env_client as client:
+        token = generate_jwt({"sub": "usr_123456", "role": "user"}, "test_jwt_secret")
+        
+        response = client.get(
+            "/api/shopee/conversions?sub_id=someone_else",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    
+    call_args = fake_fetch.call_args[0][0]
+    assert "sub_id=usr_123456" in call_args
+    assert "sub_id=someone_else" not in call_args
+
+

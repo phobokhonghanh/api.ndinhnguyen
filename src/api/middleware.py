@@ -12,6 +12,7 @@ from core.settings import AppSettings
 PUBLIC_API_PATHS = {
     "/api/stats",
     "/api/shopee/affiliate",
+    "/api/shopee/conversions",
     "/api/auth/google/login",
     "/api/auth/google/logout",
 }
@@ -31,33 +32,34 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
     ):
         return json_response(response(False, "not_found"), 404)
 
+    # 1. Extract and verify user context
+    authorization = request.headers.get("authorization", "")
+    supplied = authorization.removeprefix("Bearer ").strip()
+
+    user_context = None
+    if supplied:
+        if settings.admin_token and hmac.compare_digest(supplied, settings.admin_token):
+            user_context = {"role": "admin", "sub": "admin"}
+        elif settings.jwt_secret:
+            from core.auth import verify_jwt
+
+            payload = verify_jwt(supplied, settings.jwt_secret)
+            if payload:
+                user_context = payload
+
+    request.state.user = user_context
+
+    # 2. CORS or method checks
     if request.method == "OPTIONS":
         api_response = json_response(response(True, "ok"))
-    elif request.url.path.startswith("/api/") and request.url.path not in PUBLIC_API_PATHS:
-        authorization = request.headers.get("authorization", "")
-        supplied = authorization.removeprefix("Bearer ").strip()
-        
-        authorized = False
-        is_forbidden = False
-
-        if supplied:
-            # 1. Try static admin token if configured
-            if settings.admin_token and hmac.compare_digest(supplied, settings.admin_token):
-                authorized = True
-            # 2. Try verifying as JWT session token
-            elif settings.jwt_secret:
-                from core.auth import verify_jwt
-                payload = verify_jwt(supplied, settings.jwt_secret)
-                if payload:
-                    if payload.get("role") == "admin":
-                        authorized = True
-                    else:
-                        is_forbidden = True
-
-        if is_forbidden:
-            api_response = json_response(response(False, "auth_forbidden"), 403)
-        elif not authorized:
+    elif (
+        request.url.path.startswith("/api/")
+        and request.url.path not in PUBLIC_API_PATHS
+    ):
+        if not request.state.user:
             api_response = json_response(response(False, "auth_invalid"), 401)
+        elif request.state.user.get("role") != "admin":
+            api_response = json_response(response(False, "auth_forbidden"), 403)
         else:
             api_response = await call_next(request)
     else:
