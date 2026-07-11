@@ -4,14 +4,16 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
 from api.helpers import get_model_data, run_db_operation
+from core.responses import Response, json_response
 from features.bookmarks import service
-from features.bookmarks.schemas import BookmarkInput, PaginatedBookmarksResponse, ApiResponse
+from features.bookmarks.schemas import BookmarkInput, BookmarkSchema
+from typing import Any
 
 
 router = APIRouter()
 
 
-@router.get("/api/bookmarks", response_model=PaginatedBookmarksResponse)
+@router.get("/api/bookmarks", response_model=Response[list[BookmarkSchema]])
 async def get_bookmarks(
     categoryId: str = Query("", description="Filter bookmarks by category ID (includes sub-categories)"),
     q: str = Query("", description="Search term matching title, URL, or description"),
@@ -31,7 +33,7 @@ async def get_bookmarks(
     )
 
 
-@router.post("/api/bookmarks", response_model=ApiResponse)
+@router.post("/api/bookmarks", response_model=Response[Any])
 async def create_bookmark(payload: BookmarkInput) -> JSONResponse:
     """
     Creates a new bookmark.
@@ -42,7 +44,7 @@ async def create_bookmark(payload: BookmarkInput) -> JSONResponse:
     )
 
 
-@router.put("/api/bookmarks/{bookmark_id}", response_model=ApiResponse)
+@router.put("/api/bookmarks/{bookmark_id}", response_model=Response[Any])
 async def update_bookmark(
     bookmark_id: str, payload: BookmarkInput
 ) -> JSONResponse:
@@ -55,7 +57,7 @@ async def update_bookmark(
     )
 
 
-@router.delete("/api/bookmarks/{bookmark_id}", response_model=ApiResponse)
+@router.delete("/api/bookmarks/{bookmark_id}", response_model=Response[Any])
 async def delete_bookmark(bookmark_id: str) -> JSONResponse:
     """
     Deletes a bookmark by ID.

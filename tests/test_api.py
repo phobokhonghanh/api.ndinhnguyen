@@ -273,3 +273,30 @@ def test_docs_allowed_in_development(path):
         response = client.get(path)
     assert response.status_code == 200
 
+
+def test_global_exception_handlers():
+    from fastapi import HTTPException
+    from fastapi.testclient import TestClient
+
+    # Register temporary test routes on the app instance
+    @app.get("/test-http-exception")
+    async def route_http_exception():
+        raise HTTPException(status_code=418, detail="custom_teapot_error")
+
+    @app.get("/test-generic-exception")
+    async def route_generic_exception():
+        raise ValueError("Something went wrong internally")
+
+    with EnvClient():
+        client = TestClient(app, raise_server_exceptions=False)
+        
+        # 1. Test HTTPException response structure
+        response = client.get("/test-http-exception")
+        assert response.status_code == 418
+        assert response.json() == {"ok": False, "code": "custom_teapot_error"}
+
+        # 2. Test generic Exception response structure
+        response = client.get("/test-generic-exception")
+        assert response.status_code == 500
+        assert response.json() == {"ok": False, "code": "unknown_error"}
+

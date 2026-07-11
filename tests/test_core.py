@@ -33,5 +33,6 @@ def test_public_api_paths():
         "/api/shopee/conversions",
         "/api/auth/google/login",
         "/api/auth/google/logout",
+        "/api/cashbacks",
     }
 

@@ -1,14 +1,34 @@
-from typing import Any
+from typing import Generic, TypeVar
 
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+T = TypeVar("T")
 
 
-def response(ok: bool, code: str, data: Any | None = None) -> dict[str, Any]:
-    result: dict[str, Any] = {"ok": ok, "code": code}
-    if data is not None:
-        result["data"] = data
-    return result
+class Pagination(BaseModel):
+    total: int
+    page: int
+    pageSize: int
+    totalPages: int
 
 
-def json_response(payload: dict[str, Any], status_code: int = 200) -> JSONResponse:
-    return JSONResponse(payload, status_code=status_code)
+class Response(BaseModel, Generic[T]):
+    ok: bool
+    code: str
+    data: T | None = None
+    pagination: Pagination | None = None
+
+
+def json_response(
+    payload: BaseModel | None = None,
+    status_code: int = 200,
+    *,
+    ok: bool = True,
+    code: str = "ok",
+    data: object = None,
+    pagination: Pagination | None = None,
+) -> JSONResponse:
+    if payload is None:
+        payload = Response(ok=ok, code=code, data=data, pagination=pagination)
+    return JSONResponse(payload.model_dump(by_alias=True, exclude_none=True), status_code=status_code)

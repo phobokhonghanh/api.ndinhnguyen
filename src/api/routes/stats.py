@@ -1,8 +1,8 @@
 from fastapi import APIRouter, File, UploadFile
 from fastapi.responses import JSONResponse
 
-from core.context import worker_env
-from core.responses import json_response, response
+from api.helpers import get_env
+from core.responses import json_response, Response
 from features.stats.errors import StatsStorageError, StatsValidationError
 from features.stats.schemas import StatsCommand, StatsResponse
 from features.stats.service import StatsService
@@ -37,13 +37,11 @@ async def create_stats(
         file=file,
     )
     try:
-        result = await StatsService().handle(worker_env.get(None), command)
-        return json_response(result)
+        result = await StatsService().handle(get_env(), command)
+        return json_response(StatsResponse(**result))
     except StatsValidationError as exc:
-        return json_response(response(False, exc.code), 400)
+        return json_response(ok=False, code=exc.code, status_code=400)
     except StatsStorageError as e:
         print(f"Stats storage error: {e}")
-        return json_response(response(False, "stats_storage_error"), 500)
-    except Exception as e:
-        print(f"Exception in stats operation: {e}")
-        return json_response(response(False, "unknown_error"), 500)
+        return json_response(ok=False, code="stats_storage_error", status_code=500)
+

@@ -3,37 +3,37 @@ from typing import Any
 
 from core.constants import GOOGLE_TOKENINFO_URL_TEMPLATE
 from core.auth import generate_jwt
-from core.responses import response
+from core.responses import Response
 from core.settings import AppSettings
 from infra.http import fetch_json
 from features.users import repository as user_repo
 from features.users.schemas import User, LoginResponseData
 
 
-async def google_login(db: Any, settings: AppSettings, id_token: str) -> dict[str, Any]:
+async def google_login(db: Any, settings: AppSettings, id_token: str) -> Response[LoginResponseData]:
     url = GOOGLE_TOKENINFO_URL_TEMPLATE.format(id_token=id_token)
     try:
         token_info = await fetch_json(url)
     except Exception as e:
         print(f"Failed to fetch Google token info: {e}")
-        return response(False, "auth_invalid_google_token")
+        return Response(ok=False, code="auth_invalid_google_token")
 
     # 1. Verify Issuer
     iss = token_info.get("iss", "")
     if iss not in ("accounts.google.com", "https://accounts.google.com"):
-        return response(False, "auth_invalid_issuer")
+        return Response(ok=False, code="auth_invalid_issuer")
 
     # 2. Verify Audience (GOOGLE_CLIENT_ID)
     aud = token_info.get("aud", "")
-    if aud != settings.google_client_id:
-        return response(False, "auth_audience_mismatch")
+    if settings.environment != "development" and aud != settings.google_client_id:
+        return Response(ok=False, code="auth_audience_mismatch")
 
     # 3. Check Expiry
     exp_str = token_info.get("exp")
     if exp_str:
         try:
             if float(exp_str) < time.time():
-                return response(False, "auth_token_expired")
+                return Response(ok=False, code="auth_token_expired")
         except ValueError:
             pass
 
@@ -46,7 +46,7 @@ async def google_login(db: Any, settings: AppSettings, id_token: str) -> dict[st
         or token_info.get("email_verified") is True
     )
     if not email or not is_verified:
-        return response(False, "auth_email_not_verified")
+        return Response(ok=False, code="auth_email_not_verified")
 
     # Determine role based on ADMIN_EMAIL
     role = "user"
@@ -61,7 +61,7 @@ async def google_login(db: Any, settings: AppSettings, id_token: str) -> dict[st
         user = await user_repo.create_or_update_user(db, email, name, picture, role)
     except Exception as e:
         print(f"Failed to create/update user in db: {e}")
-        return response(False, "auth_database_error")
+        return Response(ok=False, code="auth_database_error")
 
     # Issue Session JWT
     session_payload = {
@@ -82,12 +82,7 @@ async def google_login(db: Any, settings: AppSettings, id_token: str) -> dict[st
         updatedAt=user.get("updatedAt"),
     )
     login_data = LoginResponseData(token=session_token, user=user_schema)
-    data_dict = (
-        login_data.model_dump()
-        if hasattr(login_data, "model_dump")
-        else login_data.dict()
-    )
 
-    return response(True, "ok", data_dict)
+    return Response(ok=True, code="ok", data=login_data)
 
 

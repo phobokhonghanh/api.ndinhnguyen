@@ -326,6 +326,280 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Google Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id_token\": \"your-google-id-token-here\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/google/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"google",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Google Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/google/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"google",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Shopee",
+			"item": [
+				{
+					"name": "Create Affiliate Link",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"link\": \"https://shopee.vn/product-link\",\n  \"affiliate_id\": \"your-affiliate-id\",\n  \"sub_ids\": [\"sub1\", \"sub2\"],\n  \"deep_and_deferred\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/shopee/affiliate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shopee",
+								"affiliate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Conversions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/shopee/conversions?page_size=20&page_num=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"shopee",
+								"conversions"
+							],
+							"query": [
+								{
+									"key": "page_size",
+									"value": "20"
+								},
+								{
+									"key": "page_num",
+									"value": "1"
+								},
+								{
+									"key": "sub_id",
+									"value": null,
+									"disabled": true
+								},
+								{
+									"key": "purchase_time_s",
+									"value": null,
+									"disabled": true
+								},
+								{
+									"key": "purchase_time_e",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Admin Conversions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/shopee/conversions?page_size=20&page_num=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"shopee",
+								"conversions"
+							],
+							"query": [
+								{
+									"key": "page_size",
+									"value": "20"
+								},
+								{
+									"key": "page_num",
+									"value": "1"
+								},
+								{
+									"key": "sub_id",
+									"value": null,
+									"disabled": true
+								},
+								{
+									"key": "purchase_time_s",
+									"value": null,
+									"disabled": true
+								},
+								{
+									"key": "purchase_time_e",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sync Shopee Cashbacks",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/shopee/conversions/sync?sub_id=&purchase_time_s=&purchase_time_e=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"shopee",
+								"conversions",
+								"sync"
+							],
+							"query": [
+								{
+									"key": "sub_id",
+									"value": "",
+									"description": "Optional: Sync for a specific user sub_id",
+									"disabled": true
+								},
+								{
+									"key": "purchase_time_s",
+									"value": "",
+									"description": "Optional: Start purchase timestamp",
+									"disabled": true
+								},
+								{
+									"key": "purchase_time_e",
+									"value": "",
+									"description": "Optional: End purchase timestamp",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cashbacks",
+			"item": [
+				{
+					"name": "Get Cashbacks History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cashbacks",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cashbacks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Admin Cashbacks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/admin/cashbacks?page=1&pageSize=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"cashbacks"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "20"
+								},
+								{
+									"key": "userId",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"auth": {
@@ -367,6 +641,11 @@
 		{
 			"key": "admin_token",
 			"value": "secret",
+			"type": "string"
+		},
+		{
+			"key": "user_token",
+			"value": "your-jwt-token-here",
 			"type": "string"
 		}
 	]

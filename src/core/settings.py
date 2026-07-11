@@ -16,6 +16,7 @@ class AppSettings:
     google_client_id: str = ""
     admin_email: str = ""
     shopee_cookie: str = ""
+    commission_rate: float = 0.5
 
     @classmethod
     def from_env(cls, env: Any) -> "AppSettings":
@@ -24,6 +25,13 @@ class AppSettings:
             for item in env_value(env, "ALLOWED_ORIGINS").split(",")
             if item.strip()
         }
+        
+        rate_val = getattr(env, "COMMISSION_RATE", None)
+        try:
+            commission_rate = float(rate_val) if rate_val is not None else 0.5
+        except (ValueError, TypeError):
+            commission_rate = 0.5
+
         return cls(
             admin_token=env_value(env, "ADMIN_TOKEN"),
             allowed_origins=frozenset(origins),
@@ -32,4 +40,5 @@ class AppSettings:
             google_client_id=env_value(env, "GOOGLE_CLIENT_ID"),
             admin_email=env_value(env, "ADMIN_EMAIL"),
             shopee_cookie=env_value(env, "SHOPEE_COOKIE"),
+            commission_rate=commission_rate,
         )

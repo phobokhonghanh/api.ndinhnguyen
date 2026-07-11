@@ -296,7 +296,7 @@ def test_api_login_failures(mock_fetch):
 def test_secured_routes_middleware_authorizations(monkeypatch):
     # Mock bookmarks service to avoid hitting actual database categories/bookmarks queries
     async def fake_get_bookmarks_dashboard(*_args, **_kwargs):
-        return {"ok": True, "code": "ok", "data": {"bookmarks": []}}
+        return {"ok": True, "code": "ok", "data": []}
 
     monkeypatch.setattr(
         "api.routes.bookmarks.service.get_bookmarks_dashboard",

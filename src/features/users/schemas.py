@@ -19,8 +19,3 @@ class LoginResponseData(BaseModel):
     token: str
     user: User
 
-
-class LoginResponse(BaseModel):
-    ok: bool
-    code: str
-    data: LoginResponseData | None = None

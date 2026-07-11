@@ -5,7 +5,7 @@ from typing import Any
 from urllib.parse import urlparse
 from uuid import uuid4
 
-from core.responses import response
+from core.responses import Response, Pagination
 from features.bookmarks import repository
 
 
@@ -90,7 +90,7 @@ async def get_categories_dashboard(
     page_size: int = 10,
     sort_by: str = "name",
     sort_order: str = "asc",
-) -> dict[str, Any]:
+) -> Response:
     total = await repository.count_categories(db, query)
     import math
     total_pages = math.ceil(total / page_size) if total > 0 else 0
@@ -101,18 +101,16 @@ async def get_categories_dashboard(
 
     tree = build_tree(categories)
 
-    return response(
-        True,
-        "ok",
-        {
-            "categoryTree": tree,
-            "pagination": {
-                "total": total,
-                "page": page,
-                "pageSize": page_size,
-                "totalPages": total_pages,
-            },
-        },
+    return Response(
+        ok=True,
+        code="ok",
+        data=tree,
+        pagination=Pagination(
+            total=total,
+            page=page,
+            pageSize=page_size,
+            totalPages=total_pages,
+        ),
     )
 
 
@@ -124,7 +122,7 @@ async def get_bookmarks_dashboard(
     page_size: int = 20,
     sort_by: str = "createdAt",
     sort_order: str = "desc",
-) -> dict[str, Any]:
+) -> Response:
     category_ids = []
     if category_id:
         categories = await repository.list_categories(db)
@@ -138,79 +136,76 @@ async def get_bookmarks_dashboard(
         db, query.strip(), category_ids, page, page_size, sort_by, sort_order
     )
 
-    return response(
-        True,
-        "ok",
-        {
-            "bookmarks": bookmarks,
-            "pagination": {
-                "total": total,
-                "page": page,
-                "pageSize": page_size,
-                "totalPages": total_pages,
-            },
-        },
+    return Response(
+        ok=True,
+        code="ok",
+        data=bookmarks,
+        pagination=Pagination(
+            total=total,
+            page=page,
+            pageSize=page_size,
+            totalPages=total_pages,
+        ),
     )
-
 
 
 async def save_bookmark(
     db: Any, raw: dict[str, Any], bookmark_id: str | None = None
-) -> dict[str, Any]:
+) -> Response:
     data = normalize_bookmark(raw)
     error = validate_bookmark(data)
     if error:
-        return response(False, error)
+        return Response(ok=False, code=error)
     if not await repository.category_exists(db, data["categoryId"]):
-        return response(False, "category_not_found")
+        return Response(ok=False, code="category_not_found")
     if bookmark_id and not await repository.bookmark_exists(db, bookmark_id):
-        return response(False, "bookmark_not_found")
+        return Response(ok=False, code="bookmark_not_found")
     if bookmark_id:
         await repository.update_bookmark(db, bookmark_id, data)
     else:
         await repository.create_bookmark(db, data)
-    return response(True, "ok")
+    return Response(ok=True, code="ok")
 
 
 async def save_category(
     db: Any, raw: dict[str, Any], category_id: str | None = None
-) -> dict[str, Any]:
+) -> Response:
     data = normalize_category(raw)
     if not data["name"]:
-        return response(False, "title_required")
+        return Response(ok=False, code="title_required")
     if category_id and not await repository.category_exists(db, category_id):
-        return response(False, "category_not_found")
+        return Response(ok=False, code="category_not_found")
     if data["parentId"]:
         if data["parentId"] == category_id:
-            return response(False, "category_required")
+            return Response(ok=False, code="category_required")
         if not await repository.category_exists(db, data["parentId"]):
-            return response(False, "category_not_found")
+            return Response(ok=False, code="category_not_found")
         if category_id:
             categories = await repository.list_categories(db)
             if data["parentId"] in descendant_ids(categories, category_id):
-                return response(False, "category_required")
+                return Response(ok=False, code="category_required")
     slug = await repository.unique_slug(db, slugify(data["name"]), category_id)
     if category_id:
         await repository.update_category(db, category_id, data, slug)
     else:
         await repository.create_category(db, data, slug)
-    return response(True, "ok")
+    return Response(ok=True, code="ok")
 
 
-async def remove_bookmark(db: Any, bookmark_id: str) -> dict[str, Any]:
+async def remove_bookmark(db: Any, bookmark_id: str) -> Response:
     if not await repository.bookmark_exists(db, bookmark_id):
-        return response(False, "bookmark_not_found")
+        return Response(ok=False, code="bookmark_not_found")
     await repository.delete_bookmark(db, bookmark_id)
-    return response(True, "ok")
+    return Response(ok=True, code="ok")
 
 
-async def remove_category(db: Any, category_id: str) -> dict[str, Any]:
+async def remove_category(db: Any, category_id: str) -> Response:
     if not await repository.category_exists(db, category_id):
-        return response(False, "category_not_found")
+        return Response(ok=False, code="category_not_found")
     state = await repository.category_delete_state(db, category_id)
     if state == "has_children":
-        return response(False, "category_has_children")
+        return Response(ok=False, code="category_has_children")
     if state == "in_use":
-        return response(False, "category_in_use")
+        return Response(ok=False, code="category_in_use")
     await repository.delete_category(db, category_id)
-    return response(True, "ok")
+    return Response(ok=True, code="ok")

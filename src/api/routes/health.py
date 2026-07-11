@@ -1,36 +1,29 @@
-from typing import Any
-
-from fastapi import APIRouter, Response
+from fastapi import APIRouter
+import fastapi
 from pydantic import BaseModel
 
-from core.responses import response
+from core.responses import Response
 
 
 class HealthData(BaseModel):
     service: str
 
 
-class HealthResponse(BaseModel):
-    ok: bool
-    code: str
-    data: HealthData
-
-
 router = APIRouter()
 
 
-@router.get("/health", response_model=HealthResponse)
-async def health() -> dict[str, Any]:
+@router.get("/health", response_model=Response[HealthData])
+async def health() -> Response[HealthData]:
     """
     Returns the health status of the service.
     """
-    return response(True, "ok", {"service": "api.ndinhnguyen"})
+    return Response(ok=True, code="ok", data=HealthData(service="api.ndinhnguyen"))
 
 
 @router.get("/favicon.ico", include_in_schema=False)
-async def favicon() -> Response:
+async def favicon() -> fastapi.Response:
     """
     Handles favicon requests by returning a 204 No Content response.
     """
-    return Response(status_code=204)
+    return fastapi.Response(status_code=204)
 

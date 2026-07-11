@@ -55,7 +55,8 @@ def test_save_bookmark_checks_category(monkeypatch):
         )
     )
 
-    assert result == {"ok": False, "code": "category_not_found"}
+    assert result.ok is False
+    assert result.code == "category_not_found"
 
 
 def test_delete_category_preserves_constraints(monkeypatch):
@@ -72,7 +73,8 @@ def test_delete_category_preserves_constraints(monkeypatch):
 
     result = asyncio.run(service.remove_category(object(), "category"))
 
-    assert result == {"ok": False, "code": "category_in_use"}
+    assert result.ok is False
+    assert result.code == "category_in_use"
 
 
 def test_save_category_rejects_descendant_parent(monkeypatch):
@@ -96,7 +98,8 @@ def test_save_category_rejects_descendant_parent(monkeypatch):
         )
     )
 
-    assert result == {"ok": False, "code": "category_required"}
+    assert result.ok is False
+    assert result.code == "category_required"
 
 
 def test_get_categories_dashboard_pagination(monkeypatch):
@@ -118,15 +121,13 @@ def test_get_categories_dashboard_pagination(monkeypatch):
         service.get_categories_dashboard(object(), "test", page=2, page_size=10)
     )
 
-    assert result["ok"] is True
-    assert result["code"] == "ok"
-    assert result["data"]["pagination"] == {
-        "total": 15,
-        "page": 2,
-        "pageSize": 10,
-        "totalPages": 2,
-    }
-    assert result["data"]["categoryTree"][0]["id"] == "cat2"
+    assert result.ok is True
+    assert result.code == "ok"
+    assert result.pagination.total == 15
+    assert result.pagination.page == 2
+    assert result.pagination.pageSize == 10
+    assert result.pagination.totalPages == 2
+    assert result.data[0]["id"] == "cat2"
 
 
 def test_get_bookmarks_dashboard_pagination(monkeypatch):
@@ -158,14 +159,12 @@ def test_get_bookmarks_dashboard_pagination(monkeypatch):
         )
     )
 
-    assert result["ok"] is True
-    assert result["code"] == "ok"
+    assert result.ok is True
+    assert result.code == "ok"
     assert set(called_category_ids) == {"parent", "child"}
-    assert result["data"]["pagination"] == {
-        "total": 25,
-        "page": 1,
-        "pageSize": 20,
-        "totalPages": 2,
-    }
-    assert result["data"]["bookmarks"][0]["id"] == "b1"
+    assert result.pagination.total == 25
+    assert result.pagination.page == 1
+    assert result.pagination.pageSize == 20
+    assert result.pagination.totalPages == 2
+    assert result.data[0]["id"] == "b1"
 

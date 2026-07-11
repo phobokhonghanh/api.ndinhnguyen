@@ -4,9 +4,8 @@ from typing import Any
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from core.context import worker_env
-from core.responses import json_response, response
-from core.settings import AppSettings
+from api.helpers import get_settings
+from core.responses import json_response, Response
 
 
 PUBLIC_API_PATHS = {
@@ -15,22 +14,20 @@ PUBLIC_API_PATHS = {
     "/api/shopee/conversions",
     "/api/auth/google/login",
     "/api/auth/google/logout",
+    "/api/cashbacks",
 }
 
 
 async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
-    env = worker_env.get(None)
-    settings = AppSettings.from_env(env)
+    settings = get_settings()
     origin = request.headers.get("origin")
-
-    if origin and origin not in settings.allowed_origins:
-        return json_response(response(False, "origin_not_allowed"), 403)
-
     path = request.url.path
+    if origin and settings.environment != "development" and origin not in settings.allowed_origins:
+        return json_response(Response(ok=False, code="origin_not_allowed"), 403)
     if settings.environment == "production" and (
         path in {"/openapi.json", "/redoc", "/docs"} or path.startswith("/docs/")
     ):
-        return json_response(response(False, "not_found"), 404)
+        return json_response(Response(ok=False, code="not_found"), 404)
 
     # 1. Extract and verify user context
     authorization = request.headers.get("authorization", "")
@@ -51,22 +48,22 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
 
     # 2. CORS or method checks
     if request.method == "OPTIONS":
-        api_response = json_response(response(True, "ok"))
+        api_response = json_response(Response(ok=True, code="ok"))
     elif (
         request.url.path.startswith("/api/")
         and request.url.path not in PUBLIC_API_PATHS
     ):
         if not request.state.user:
-            api_response = json_response(response(False, "auth_invalid"), 401)
+            api_response = json_response(Response(ok=False, code="auth_invalid"), 401)
         elif request.state.user.get("role") != "admin":
-            api_response = json_response(response(False, "auth_forbidden"), 403)
+            api_response = json_response(Response(ok=False, code="auth_forbidden"), 403)
         else:
             api_response = await call_next(request)
     else:
         api_response = await call_next(request)
 
 
-    if origin and origin in settings.allowed_origins:
+    if origin and (settings.environment == "development" or origin in settings.allowed_origins):
         api_response.headers["Access-Control-Allow-Origin"] = origin
         api_response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
         api_response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"

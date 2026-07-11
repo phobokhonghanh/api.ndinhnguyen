@@ -4,6 +4,9 @@ STATS_SNAPSHOT_PATH_TEMPLATE={product}/snapshot/loaddate={yyyymmdd}/{machine_id}
 STATS_RUNTIME_PATH_TEMPLATE={product}/runtime/loaddate={yyyymmdd}/{machine_id}_{batch_id}.jsonl
 ENVIRONMENT=development
 
+SHOPEE_COOKIE=replace-me
+COMMISSION_RATE=0.5
+
 # Google Auth & Session Configurations
 JWT_SECRET=replace-me-with-a-secure-secret-key-at-least-32-chars
 GOOGLE_CLIENT_ID=replace-me-with-your-google-oauth-client-id.apps.googleusercontent.com

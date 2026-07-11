@@ -3,6 +3,7 @@ from typing import Any
 from pydantic import BaseModel
 
 
+
 class BookmarkInput(BaseModel):
     title: str = ""
     url: str = ""
@@ -16,10 +17,6 @@ class CategoryInput(BaseModel):
     parentId: str | None = None
 
 
-class ApiResponse(BaseModel):
-    ok: bool
-    code: str
-    data: Any | None = None
 
 
 class BookmarkSchema(BaseModel):
@@ -48,32 +45,7 @@ class CategoryTreeNode(BaseModel):
 CategoryTreeNode.model_rebuild()
 
 
-class PaginationMetadata(BaseModel):
-    total: int
-    page: int
-    pageSize: int
-    totalPages: int
 
 
-class PaginatedCategoriesData(BaseModel):
-    categoryTree: list[CategoryTreeNode]
-    pagination: PaginationMetadata
-
-
-class PaginatedCategoriesResponse(BaseModel):
-    ok: bool
-    code: str
-    data: PaginatedCategoriesData
-
-
-class PaginatedBookmarksData(BaseModel):
-    bookmarks: list[BookmarkSchema]
-    pagination: PaginationMetadata
-
-
-class PaginatedBookmarksResponse(BaseModel):
-    ok: bool
-    code: str
-    data: PaginatedBookmarksData
 
 

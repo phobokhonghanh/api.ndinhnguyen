@@ -14,19 +14,24 @@ Dưới đây là sơ đồ cây thư mục chi tiết của dự án **api.ndin
 ├── uv.lock                 # File khóa môi trường ảo được tạo bởi `uv`
 │
 ├── docs/                   # Tài liệu phác thảo chức năng
-│   ├── bookmarks.txt
-│   └── shope.txt
 │
-├── migrations/             # Các file SQL
-│   ├── 0001_create_bookmarks.sql  # Khởi tạo bảng danh mục và bảng bookmarks
-│   └── 0002_create_users.sql      # Khởi tạo bảng người dùng phục vụ Google Login & RBAC
+├── migrations/             # Các file SQL (D1 Database migrations)
+│   ├── 0001_create_bookmarks.sql              # Khởi tạo bảng danh mục và bảng bookmarks
+│   ├── 0002_create_users.sql                  # Khởi tạo bảng người dùng phục vụ Google Login & RBAC
+│   ├── 0003_create_cashbacks.sql              # Khởi tạo bảng cashbacks
+│   ├── 0004_add_item_id_to_cashbacks.sql      # Bổ sung trường item_id
+│   ├── 0004_add_items_to_cashbacks.sql        # Hỗ trợ lưu trữ thông tin sản phẩm
+│   ├── 0005_update_cashbacks_schema.sql       # Nâng cấp cấu trúc dữ liệu lưu trữ
+│   ├── 0006_rename_coversion_to_conversion.sql # Sửa lỗi chính tả tên cột conversion
+│   └── 0007_remove_order_id_from_cashbacks.sql  # Xóa cột order_id dư thừa, chuyển sang index tối ưu
 │
 ├── postman/                # File collection hỗ trợ test API bằng Postman
-│   └── bookmarks_api_collection.json
+│   └── api_collection.json
 │
 ├── tests/                  # Bộ kiểm thử tích hợp (Integration Tests) chạy với pytest
 │   ├── test_api.py         # Kiểm tra API chính cho Bookmark và Category
 │   ├── test_auth.py        # Kiểm tra xác thực Google OAuth, Middleware RBAC và JWT session
+│   ├── test_cashbacks.py   # Kiểm tra tích hợp nghiệp vụ cashback & đồng bộ Shopee
 │   ├── test_core.py        # Kiểm tra config và middleware tĩnh
 │   ├── test_service.py     # Kiểm tra logic nghiệp vụ lưu bookmark, phân trang danh mục
 │   ├── test_shopee.py      # Kiểm tra chuyển đổi link affiliate Shopee
@@ -43,9 +48,10 @@ Dưới đây là sơ đồ cây thư mục chi tiết của dự án **api.ndin
     │   └── routes/         # Khai báo các endpoints HTTP (FastAPI Routers)
     │       ├── auth.py         # Login & logout bằng Google OAuth 2.0
     │       ├── bookmarks.py    # CRUD bookmark cá nhân
+    │       ├── cashbacks.py    # Truy xuất dữ liệu cashback và admin cashback
     │       ├── categories.py   # CRUD danh mục phân cấp tree
     │       ├── health.py       # Healthcheck
-    │       ├── shopee.py       # Tạo link Shopee Affiliate từ link sản phẩm gốc
+    │       ├── shopee.py       # Tạo link Shopee Affiliate, báo cáo conversions & sync
     │       └── stats.py        # Ghi nhận telemetry, logs/snapshots hoạt động của app
     │
     ├── core/               # Các cấu hình và chức năng lõi hệ thống (Core Configs & Shared Utilities)
@@ -65,9 +71,17 @@ Dưới đây là sơ đồ cây thư mục chi tiết của dự án **api.ndin
         │   ├── repository.py  # Truy vấn cơ sở dữ liệu D1 cho bookmark & category
         │   ├── schemas.py     # Schema Pydantic cho dữ liệu đầu vào/đầu ra của bookmark & category
         │   └── service.py     # Xử lý nghiệp vụ phân trang, xây dựng cây danh mục (build tree)
-        ├── shopee/         # Tích hợp Shopee Affiliate
-        │   ├── schemas.py     # Cấu trúc request link aff, thông tin sản phẩm và báo cáo chuyển đổi (conversions)
-        │   └── service.py     # Trích xuất thông tin sản phẩm, sinh link affiliate và truy vấn báo cáo từ Shopee API
+        ├── cashbacks/      # Nghiệp vụ cashback và quản lý các platform affiliate
+        │   ├── interfaces.py  # Định nghĩa interface PlatformAdapter và hợp đồng các platform
+        │   ├── repository.py  # Truy vấn cơ sở dữ liệu D1 cho các bản ghi cashback
+        │   ├── schemas.py     # Schema Pydantic cho dữ liệu cashback
+        │   ├── service.py     # Xử lý nghiệp vụ chính của cashback và đồng bộ từ các platforms
+        │   └── shopee/        # Platform Shopee tích hợp cụ thể
+        │       ├── adapter.py    # Shopee Platform Adapter chuyển đổi Conversion sang CashbackRecord
+        │       ├── client.py     # HTTP Client kết nối API Shopee Affiliate
+        │       ├── helper.py     # Các hàm tiện ích hỗ trợ chuyển đổi dữ liệu và ép kiểu an toàn cho Shopee
+        │       ├── schemas.py    # Cấu trúc request link aff, thông tin sản phẩm và báo cáo chuyển đổi (conversions)
+        │       └── service.py    # Trích xuất thông tin sản phẩm, sinh link affiliate và truy vấn báo cáo từ Shopee API
         ├── stats/          # Nghiệp vụ telemetry / ghi nhận trạng thái
         │   ├── constants.py   # Các tham số cấu hình tĩnh cho telemetry (giới hạn file, kích thước)
         │   ├── errors.py      # Định nghĩa các ngoại lệ (ValidationError, StorageError) cho stats

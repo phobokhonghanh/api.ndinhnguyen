@@ -4,14 +4,16 @@ from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 
 from api.helpers import get_model_data, run_db_operation
+from core.responses import Response, json_response
 from features.bookmarks import service
-from features.bookmarks.schemas import CategoryInput, ApiResponse, PaginatedCategoriesResponse
+from features.bookmarks.schemas import CategoryInput, CategoryTreeNode
+from typing import Any
 
 
 router = APIRouter()
 
 
-@router.get("/api/categories", response_model=PaginatedCategoriesResponse)
+@router.get("/api/categories", response_model=Response[list[CategoryTreeNode]])
 async def get_categories(
     q: str = Query("", description="Search term for category name"),
     page: int = Query(1, ge=1, description="Page number (starts from 1)"),
@@ -30,7 +32,7 @@ async def get_categories(
     )
 
 
-@router.post("/api/categories", response_model=ApiResponse)
+@router.post("/api/categories", response_model=Response[Any])
 async def create_category(payload: CategoryInput) -> JSONResponse:
     """
     Creates a new category.
@@ -41,7 +43,7 @@ async def create_category(payload: CategoryInput) -> JSONResponse:
     )
 
 
-@router.put("/api/categories/{category_id}", response_model=ApiResponse)
+@router.put("/api/categories/{category_id}", response_model=Response[Any])
 async def update_category(
     category_id: str, payload: CategoryInput
 ) -> JSONResponse:
@@ -54,7 +56,7 @@ async def update_category(
     )
 
 
-@router.delete("/api/categories/{category_id}", response_model=ApiResponse)
+@router.delete("/api/categories/{category_id}", response_model=Response[Any])
 async def delete_category(category_id: str) -> JSONResponse:
     """
     Deletes a category by ID.
