@@ -16,4 +16,4 @@ build/
 .venv-workers/
 python_modules/
 .agents
-docs/
+logs/

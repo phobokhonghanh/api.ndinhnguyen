@@ -247,3 +247,23 @@ Nếu bạn kết nối trực tiếp kho chứa GitHub với Cloudflare Workers
    ```bash
    npx wrangler d1 execute ndinhnguyen --remote --file=schema.sql
    ```
+
+---
+
+## Giám sát & Logs (Monitoring & Logs)
+
+Để theo dõi log thời gian thực từ Cloudflare Workers trên môi trường Production và tự động ghi log vào các file riêng biệt theo ngày:
+
+### 1. Chạy ngầm tiến trình ghi log
+Chạy lệnh sau để bật tiến trình chạy ngầm ghi log vào thư mục `logs/` (nếu thư mục chưa tồn tại, nó sẽ tự động được tạo và cấu hình bỏ qua bởi git):
+```bash
+make logs-tail
+```
+Log sẽ tự động ghi nối tiếp vào các file tương ứng theo ngày: `logs/wrangler_YYYY-MM-DD.log`.
+
+### 2. Dừng tiến trình ghi log
+Khi không muốn ghi log nữa, chạy lệnh sau để dừng tiến trình chạy ngầm:
+```bash
+make logs-stop
+```
+

@@ -7,26 +7,20 @@ Dưới đây là sơ đồ cây thư mục chi tiết của dự án **api.ndin
 ├── AGENTS.md               # Quy định và hướng dẫn dành cho AI coding agents
 ├── Makefile                # Tập hợp phím tắt lệnh khởi chạy
 ├── README.md               # Tài liệu hướng dẫn
-├── README_TREE.md          # Tài liệu này (cây thư mục và cấu trúc hệ thống)
 ├── pylock.toml             # File khóa phiên bản thư viện dùng cho Python Workers của Cloudflare
 ├── pyproject.toml          # Cấu hình project Python, dependencies (FastAPI, pytest, httpx, ...)
+├── schema.sql              # Cấu trúc schema SQL của database D1
 ├── wrangler.jsonc          # Cấu hình Cloudflare Wrangler (bindings cho D1, R2, biến môi trường, compatibility)
 ├── uv.lock                 # File khóa môi trường ảo được tạo bởi `uv`
 │
-├── docs/                   # Tài liệu phác thảo chức năng
+├── docs/                   # Thư mục chứa tài liệu và tài nguyên kiểm thử
+│   ├── README_TREE.md      # Tài liệu này (cây thư mục và cấu trúc hệ thống)
+│   └── postman.json        # File collection hỗ trợ test API bằng Postman
 │
-├── migrations/             # Các file SQL (D1 Database migrations)
-│   ├── 0001_create_bookmarks.sql              # Khởi tạo bảng danh mục và bảng bookmarks
-│   ├── 0002_create_users.sql                  # Khởi tạo bảng người dùng phục vụ Google Login & RBAC
-│   ├── 0003_create_cashbacks.sql              # Khởi tạo bảng cashbacks
-│   ├── 0004_add_item_id_to_cashbacks.sql      # Bổ sung trường item_id
-│   ├── 0004_add_items_to_cashbacks.sql        # Hỗ trợ lưu trữ thông tin sản phẩm
-│   ├── 0005_update_cashbacks_schema.sql       # Nâng cấp cấu trúc dữ liệu lưu trữ
-│   ├── 0006_rename_coversion_to_conversion.sql # Sửa lỗi chính tả tên cột conversion
-│   └── 0007_remove_order_id_from_cashbacks.sql  # Xóa cột order_id dư thừa, chuyển sang index tối ưu
+├── logs/                   # Thư mục chứa log lỗi/hoạt động của app (bị bỏ qua bởi git)
 │
-├── postman/                # File collection hỗ trợ test API bằng Postman
-│   └── api_collection.json
+├── scripts/                # Thư mục chứa các script hỗ trợ vận hành/tiện ích
+│   └── get_logs.sh         # Script chạy ngầm để ghi log wrangler tail theo ngày
 │
 ├── tests/                  # Bộ kiểm thử tích hợp (Integration Tests) chạy với pytest
 │   ├── test_api.py         # Kiểm tra API chính cho Bookmark và Category
