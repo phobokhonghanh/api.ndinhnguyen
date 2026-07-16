@@ -1,3 +1,5 @@
+from api.helpers import get_commission_rate
+from core.constants import DATA_SOURCE
 import re
 from typing import TypeVar, Type
 from datetime import datetime
@@ -103,28 +105,66 @@ async def fetch_prod_alt_by_link(link: str) -> Product | None:
             prod_info = data["productInfo"]
             # ProductName and price must be present and not null
             if prod_info.get("productName") and prod_info.get("price") is not None:
-                mapped_info = {
-                    "id": safe_cast(prod_info.get("itemId"), str),
-                    "name": prod_info.get("productName"),
-                    "shop": prod_info.get("shopName"),
-                    "price": prod_info.get("price"),
-                    "sales": prod_info.get("sales"),
-                    "image": format_url_image(prod_info.get("imageUrl")),
-                    "link": prod_info.get("productLink"),
-                    "rating": float(prod_info["rating"]) if prod_info.get("rating") else None,
-                    "commission": float(prod_info["commission"]) if prod_info.get("commission") else None,
-                    "lastUpdate": prod_info.get("lastUpdate"),
-                    "dataSource": "3rd API",
-                }
-                return Product(**mapped_info)
+                return map_raw_to_schema_product(prod_info, DATA_SOURCE.THIRD_PARTY)
     except Exception as e:
         print(f"Error fetching product data: {e}")
     return None
 
+def calculate_commission_cashback(
+    commission: float
+) -> float:
+    return commission * get_commission_rate()
 
+def map_raw_to_schema_product(raw: dict[str, object], source: str = DATA_SOURCE.SHOPEE_API) -> Product:
+    commission_amount = 0
+    product = None
+    if source == DATA_SOURCE.SHOPEE_API:
+        commission = (convert_micro_to_unit(raw.get("item_commission")) or 0.0) + \
+            (convert_micro_to_unit(raw.get("capped_brand_commission")) or 0.0)
+        commission_amount = calculate_commission_cashback(commission)
+        product = Product(
+            id=safe_cast(raw.get("item_id"), str),
+            name=safe_cast(raw.get("item_name"), str),
+            shop=safe_cast(raw.get("shop_name"), str),
+            price=convert_micro_to_unit(raw.get("item_price")),
+            sales=safe_cast(raw.get("sales"), int),
+            image=format_url_image(safe_cast(raw.get("img_code"), str)),
+            link=create_product_link(
+                shop_id=safe_cast(raw.get("shop_id"), str) or "",
+                item_id=safe_cast(raw.get("item_id"), str) or ""
+            ),
+            rating=safe_cast(raw.get("rating"), float),
+            commission=commission_amount,
+            lastUpdate=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            dataSource=DATA_SOURCE.SHOPEE_API,
+        )
+    elif source == DATA_SOURCE.THIRD_PARTY:
+        commission = (raw.get("commission") or 0.0)
+        commission_amount = calculate_commission_cashback(commission)
+        product = Product(
+            id=safe_cast(raw.get("itemId"), str),
+            name=safe_cast(raw.get("productName"), str),
+            shop=safe_cast(raw.get("shopName"), str),
+            price=raw.get("price"),
+            sales=safe_cast(raw.get("sales"), int),
+            image=format_url_image(safe_cast(raw.get("imageUrl"), str)),
+            link=safe_cast(raw.get("productLink"), str),
+            rating=safe_cast(raw.get("rating"), float),
+            commission=commission_amount,
+            lastUpdate=safe_cast(raw.get("lastUpdate"), str) or datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            dataSource=DATA_SOURCE.THIRD_PARTY,
+        )
+    return product
 
-def map_raw_to_schema_conversion(raw: dict[str, object]) -> dict[str, object]:
+def map_raw_to_schema_conversion(raw: dict[str, object]) -> Conversion:
     # 1. Map orders -> order
+    if not raw or not isinstance(raw, dict):
+        return None
+
+    checkout_id = safe_cast(raw.get("checkout_id"), str)
+    if not checkout_id:
+        return None
+
     orders_list = []
     raw_orders = raw.get("orders") or []
     for raw_order in raw_orders:
@@ -135,23 +175,9 @@ def map_raw_to_schema_conversion(raw: dict[str, object]) -> dict[str, object]:
         for raw_item in raw_items:
             if not isinstance(raw_item, dict):
                 continue
-                
-            product = Product(
-                id=safe_cast(raw_item.get("item_id"), str),
-                name=safe_cast(raw_item.get("item_name"), str),
-                shop=safe_cast(raw_item.get("shop_name"), str),
-                price=convert_micro_to_unit(raw_item.get("item_price")),
-                sales=safe_cast(raw_item.get("sales"), int),
-                image=format_url_image(safe_cast(raw_item.get("img_code"), str)),
-                link=create_product_link(
-                    shop_id=safe_cast(raw_item.get("shop_id"), str) or "",
-                    item_id=safe_cast(raw_item.get("item_id"), str) or ""
-                ),
-                rating=safe_cast(raw_item.get("rating"), float),
-                commission=convert_micro_to_unit(raw_item.get("item_commission")),
-                lastUpdate=safe_cast(raw_item.get("lastUpdate"), str) or datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                dataSource="Shopee API",
-            )
+
+            product = map_raw_to_schema_product(raw_item, DATA_SOURCE.SHOPEE_API)
+
             item = Item(
                 product=product,
                 qty=safe_cast(raw_item.get("qty"), int),
@@ -170,7 +196,7 @@ def map_raw_to_schema_conversion(raw: dict[str, object]) -> dict[str, object]:
     conversion = Conversion(
         click_id=safe_cast(raw.get("click_id"), str),
         click_time=safe_cast(raw.get("click_time"), int),
-        checkout_id=safe_cast(raw.get("checkout_id"), str),
+        checkout_id=checkout_id,
         purchase_time=safe_cast(raw.get("purchase_time"), int),
         checkout_complete_time=safe_cast(raw.get("checkout_complete_time"), int),
         checkout_status=safe_cast(raw.get("checkout_status"), str),
@@ -179,4 +205,4 @@ def map_raw_to_schema_conversion(raw: dict[str, object]) -> dict[str, object]:
         utm_content=safe_cast(raw.get("utm_content"), str),
         orders=orders_list
     )
-    return conversion.model_dump(by_alias=True)
+    return conversion

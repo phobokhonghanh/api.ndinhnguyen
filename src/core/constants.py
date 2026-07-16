@@ -36,7 +36,6 @@ CASHBACK_STATUSES = {
     CASHBACK_STATUS_CANCELLED,
 }
 
-
 # Shopee Checkout Statuses
 SHOPEE_STATUS_PENDING = "Pending"
 SHOPEE_STATUS_WAITING = "Waiting for payment"
@@ -51,3 +50,7 @@ SHOPEE_CHECKOUT_STATUSES = {
 }
 
 MICRO_UNIT_SCALE: float = 100000.0
+
+class DATA_SOURCE:
+    SHOPEE_API = "Shopee API"
+    THIRD_PARTY = "3rd API"

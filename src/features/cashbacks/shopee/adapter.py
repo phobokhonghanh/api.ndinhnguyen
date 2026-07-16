@@ -1,4 +1,4 @@
-from api.helpers import get_commission_rate
+from features.cashbacks.shopee.helper import calculate_commission_cashback
 from features.cashbacks.schemas import CashbackRecord
 from features.cashbacks.interfaces import PlatformAdapter
 from features.cashbacks.shopee.helper import extract_user_id_from_utm, map_raw_to_schema_conversion
@@ -11,9 +11,7 @@ from core.constants import (
     SHOPEE_STATUS_WAITING,
     SHOPEE_STATUS_COMPLETED,
     SHOPEE_STATUS_CANCELLED,
-    MICRO_UNIT_SCALE,
 )
-
 
 class ShopeePlatformAdapter(PlatformAdapter):
     """
@@ -62,19 +60,19 @@ class ShopeePlatformAdapter(PlatformAdapter):
         if conversion is None:
             return None
 
-        user_id = extract_user_id_from_utm(conversion.get("utm_content"))
+        user_id = extract_user_id_from_utm(conversion.utm_content)
         if not user_id:
             user_id = "system"
 
-        affiliate_net_commission = conversion.get("affiliate_net_commission") or 0.0
-        cashback_amount = affiliate_net_commission * get_commission_rate()
+        affiliate_net_commission = conversion.affiliate_net_commission or 0.0
+        cashback_amount = calculate_commission_cashback(affiliate_net_commission)
         cashback = CashbackRecord(
             userId=user_id,
             platform="shopee",
             cashback=cashback_amount,
-            status=self.map_status(conversion.get("checkout_status")),
-            checkoutId=conversion.get("checkout_id") or "",
+            status=self.map_status(conversion.checkout_status),
+            checkoutId=conversion.checkout_id or "",
             conversion=conversion
         )
-
+        
         return cashback

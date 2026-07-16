@@ -1,3 +1,4 @@
+from features.cashbacks.shopee.helper import calculate_commission_cashback
 from api.helpers import get_commission_rate
 from features.cashbacks.schemas import CashbackRecord
 from fastapi import HTTPException
@@ -40,7 +41,7 @@ async def fetch_conversion_reports(
     
     data = res.get("data", {})
     raw_conversions = data.get("list") or []
-    conversions = [Conversion(**map_raw_to_schema_conversion(c)) for c in raw_conversions]
+    conversions = [map_raw_to_schema_conversion(c) for c in raw_conversions]
 
     page_num = data.get("page_num", 1)
     page_size = data.get("page_size", 20)
@@ -95,7 +96,7 @@ async def save_conversions_to_db(db, records: list[Conversion]) -> int:
             user_id = "system"
 
         affiliate_net_commission = record.affiliate_net_commission or 0.0
-        cashback_amount = affiliate_net_commission * get_commission_rate()
+        cashback_amount = calculate_commission_cashback(affiliate_net_commission)
         cashback = CashbackRecord(
             userId=user_id,
             platform="shopee",
