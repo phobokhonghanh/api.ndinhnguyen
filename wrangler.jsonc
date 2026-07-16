@@ -14,7 +14,10 @@
     "ALLOWED_ORIGINS": "http://localhost:3000,https://ndinhnguyen.pages.dev",
     "ENVIRONMENT": "production",
     "STATS_SNAPSHOT_PATH_TEMPLATE": "{product}/snapshot/loaddate={yyyymmdd}/{machine_id}.csv",
-    "STATS_RUNTIME_PATH_TEMPLATE": "{product}/runtime/loaddate={yyyymmdd}/{machine_id}_{batch_id}.jsonl"
+    "STATS_RUNTIME_PATH_TEMPLATE": "{product}/runtime/loaddate={yyyymmdd}/{machine_id}_{batch_id}.jsonl",
+    "COMMISSION_RATE": "0.5",
+    "GOOGLE_CLIENT_ID": "464829470545-ppkko6ts0v57t9to6f5h2t979fb7mnpp.apps.googleusercontent.com",
+    "ADMIN_EMAIL": "ndinhnguyen.work@gmail.com"
   },
   "r2_buckets": [
     {
