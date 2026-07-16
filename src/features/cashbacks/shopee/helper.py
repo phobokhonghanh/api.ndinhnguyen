@@ -50,14 +50,22 @@ def parse_shopee_link(link: str) -> dict[str, str]:
 
     raise ValueError("Invalid Shopee link format")
 
+import re
+
+# Regex khớp chính xác UUID v4 / UUID chuẩn (36 ký tự) ở CUỐI chuỗi ($)
+UUID_SUFFIX_REGEX = re.compile(
+    r"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+)
+
 def extract_user_id_from_utm(utm_content: str | None) -> str | None:
+    """
+    Trích xuất UUID 36 ký tự ở cuối chuỗi utm_content.
+    """
     if not utm_content:
         return None
-    parts = utm_content.split("-")
-    if len(parts) >= 2:
-        return parts[1]
-    return None
-
+    
+    match = UUID_SUFFIX_REGEX.search(utm_content.strip())
+    return match.group(1) if match else None
 
 def create_affiliate_link(
     item_id: str,
