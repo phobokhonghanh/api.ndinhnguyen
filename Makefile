@@ -1,4 +1,4 @@
-.PHONY: help install run dev deploy test db-schema-local db-schema-remote secret-put-admin-token logs-tail logs-stop
+.PHONY: help install run dev deploy test db-schema-local db-schema-remote secret-put-admin-token logs logs-stop
 
 
 WRANGLER ?= $(shell if command -v wrangler >/dev/null 2>&1; then echo wrangler; elif command -v npx >/dev/null 2>&1; then echo "npx wrangler"; else echo wrangler; fi)
@@ -16,7 +16,7 @@ help:
 		"make deploy             (Prod) Deploy the Python Worker" \
 		"make db-schema-remote   (Prod) Initialize D1 schema on remote DB" \
 		"make secret-put-admin-token  (Prod) Set ADMIN_TOKEN" \
-		"make logs-tail          (Logs) Start background wrangler logs tailing to logs/ folder" \
+		"make logs               (Logs) Start background wrangler logs tailing to logs/ folder" \
 		"make logs-stop          (Logs) Stop background wrangler logs tailing"
 
 # For Developer
@@ -45,9 +45,16 @@ secret-put-admin-token:
 	$(WRANGLER) secret put ADMIN_TOKEN
 
 ## Get log prod
-logs-tail:
+logs:
 	chmod +x scripts/get_logs.sh
 	nohup ./scripts/get_logs.sh > /dev/null 2>&1 &
 
 logs-stop:
-	pkill -f get_logs.sh || true
+	@if [ -f logs/tail.pid ]; then \
+		pid=$$(cat logs/tail.pid); \
+		echo "Stopping logs tail process with PID $$pid..."; \
+		kill -15 $$pid 2>/dev/null || true; \
+		rm -f logs/tail.pid; \
+	else \
+		echo "No running logs tail process found."; \
+	fi
