@@ -10,7 +10,7 @@ from features.bookmarks.schemas import BookmarkInput, BookmarkSchema
 from typing import Any
 
 
-router = APIRouter()
+router = APIRouter(tags=["Bookmarks"])
 
 
 @router.get("/api/bookmarks", response_model=Response[list[BookmarkSchema]])

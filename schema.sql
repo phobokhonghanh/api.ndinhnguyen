@@ -34,6 +34,9 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT,
   picture TEXT,
   role TEXT NOT NULL DEFAULT 'user',
+  bank_code TEXT,
+  account_number TEXT,
+  account_name TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
@@ -41,7 +44,27 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 INSERT OR IGNORE INTO users (id, email, name, role) VALUES ('system', 'system@ndinhnguyen.com', 'System Account', 'admin');
 
--- 4. Bảng Cashbacks (Hoàn tiền mua sắm đa nền tảng)
+-- 4. Bảng Payments (Đợt thanh toán cashback)
+CREATE TABLE IF NOT EXISTS payments (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  amount REAL NOT NULL,
+  cashback_count INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Pending',
+  bank_code TEXT,
+  account_number TEXT,
+  account_name TEXT,
+  paid_at TEXT,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(user_id) REFERENCES users(id)
+);
+
+
+CREATE INDEX IF NOT EXISTS idx_payments_user_id ON payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+
+-- 5. Bảng Cashbacks (Hoàn tiền mua sắm đa nền tảng)
 CREATE TABLE IF NOT EXISTS cashbacks (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -50,9 +73,13 @@ CREATE TABLE IF NOT EXISTS cashbacks (
   status TEXT NOT NULL,
   checkout_id TEXT NOT NULL,
   conversion TEXT NOT NULL,
+  payment_id TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY(user_id) REFERENCES users(id)
+  FOREIGN KEY(user_id) REFERENCES users(id),
+  FOREIGN KEY(payment_id) REFERENCES payments(id)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_cashbacks_platform_checkout ON cashbacks(platform, checkout_id);
 CREATE INDEX IF NOT EXISTS idx_cashbacks_user_id ON cashbacks(user_id);
+CREATE INDEX IF NOT EXISTS idx_cashbacks_payment_id ON cashbacks(payment_id);
+

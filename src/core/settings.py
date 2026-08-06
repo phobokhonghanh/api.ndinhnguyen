@@ -17,6 +17,7 @@ class AppSettings:
     admin_email: str = ""
     shopee_cookie: str = ""
     commission_rate: float = 0.5
+    payment_min_amount: float = 50000.0
 
     @classmethod
     def from_env(cls, env: Any) -> "AppSettings":
@@ -32,6 +33,12 @@ class AppSettings:
         except (ValueError, TypeError):
             commission_rate = 0.5
 
+        min_amt_val = getattr(env, "PAYMENT_MIN_AMOUNT", None)
+        try:
+            payment_min_amount = float(min_amt_val) if min_amt_val is not None else 50000.0
+        except (ValueError, TypeError):
+            payment_min_amount = 50000.0
+
         return cls(
             admin_token=env_value(env, "ADMIN_TOKEN"),
             allowed_origins=frozenset(origins),
@@ -41,4 +48,6 @@ class AppSettings:
             admin_email=env_value(env, "ADMIN_EMAIL"),
             shopee_cookie=env_value(env, "SHOPEE_COOKIE"),
             commission_rate=commission_rate,
+            payment_min_amount=payment_min_amount,
         )
+

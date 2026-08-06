@@ -34,5 +34,11 @@ def test_public_api_paths():
         "/api/auth/google/login",
         "/api/auth/google/logout",
         "/api/cashbacks",
+        "/api/user/payment-info",
+        "/api/user/dashboard",
+        "/api/payments",
+        "/api/banks",
     }
+
+
 

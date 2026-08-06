@@ -1,4 +1,4 @@
-.PHONY: help install run dev deploy test db-schema-local db-schema-remote secret-put-admin-token logs logs-stop
+.PHONY: help install run dev deploy test db-schema-local db-schema-remote db-pull secret-put-admin-token logs logs-stop
 
 
 WRANGLER ?= $(shell if command -v wrangler >/dev/null 2>&1; then echo wrangler; elif command -v npx >/dev/null 2>&1; then echo "npx wrangler"; else echo wrangler; fi)
@@ -13,6 +13,7 @@ help:
 		"make dev                (Dev) Start local Python Worker preview" \
 		"make test               (Dev) Run pytest" \
 		"make db-schema-local    (Dev) Initialize D1 schema on local DB" \
+		"make db-pull            (Dev) Export prod D1 data & import to local D1" \
 		"make deploy             (Prod) Deploy the Python Worker" \
 		"make db-schema-remote   (Prod) Initialize D1 schema on remote DB" \
 		"make secret-put-admin-token  (Prod) Set ADMIN_TOKEN" \
@@ -31,6 +32,18 @@ test:
 
 db-schema-local:
 	$(WRANGLER) d1 execute $(DB_NAME) --local --file=schema.sql
+
+## Sync D1 database from production (remote) to local development
+db-pull:
+	@echo "Exporting production D1 database ($(DB_NAME))..."
+	$(WRANGLER) d1 export $(DB_NAME) --remote --output=./prod_dump.sql
+	@echo "Resetting local D1 database tables..."
+	$(WRANGLER) d1 execute $(DB_NAME) --local --command="PRAGMA foreign_keys = OFF; DROP TABLE IF EXISTS payments; DROP TABLE IF EXISTS cashbacks; DROP TABLE IF EXISTS bookmarks; DROP TABLE IF EXISTS categories; DROP TABLE IF EXISTS users; DROP TABLE IF EXISTS d1_migrations;"
+	@echo "Importing production data into local D1 database..."
+	$(WRANGLER) d1 execute $(DB_NAME) --local --file=./prod_dump.sql
+	@rm -f ./prod_dump.sql
+	@echo "Local D1 database successfully synced with production!"
+
 
 # For Deploy Cloudflare Worker
 deploy:

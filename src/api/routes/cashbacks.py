@@ -6,14 +6,19 @@ from core.responses import Response, json_response
 from features.cashbacks import service
 from features.cashbacks.schemas import CashbackRecord
 
-router = APIRouter()
+router = APIRouter(tags=["Cashbacks"])
 
 
-@router.get("/api/cashbacks", response_model=Response[list[CashbackRecord]])
+@router.get(
+    "/api/cashbacks",
+    response_model=Response[list[CashbackRecord]],
+    summary="Lấy danh sách các khoản hoàn tiền (Cashback) của người dùng hiện tại",
+    description="Truy xuất lịch sử tích lũy hoàn tiền của người dùng đang đăng nhập với phân trang.",
+)
 async def get_cashbacks(
     request: Request,
-    page: int = Query(1, ge=1),
-    pageSize: int = Query(20, ge=1, le=100),
+    page: int = Query(1, ge=1, description="Số trang"),
+    pageSize: int = Query(20, ge=1, le=100, description="Kích thước trang"),
 ) -> JSONResponse:
     """
     Retrieves the logged-in user's cashback history.
@@ -28,12 +33,17 @@ async def get_cashbacks(
     return json_response(data=records, pagination=pagination)
 
 
-@router.get("/api/admin/cashbacks", response_model=Response[list[CashbackRecord]])
+@router.get(
+    "/api/admin/cashbacks",
+    response_model=Response[list[CashbackRecord]],
+    summary="Lấy danh sách tất cả các khoản hoàn tiền (Admin only)",
+    description="Truy xuất toàn bộ bản ghi cashback trên hệ thống hoặc lọc theo User ID cụ thể.",
+)
 async def get_admin_cashbacks(
     request: Request,
-    page: int = Query(1, ge=1),
-    pageSize: int = Query(20, ge=1, le=100),
-    userId: str | None = Query(None),
+    page: int = Query(1, ge=1, description="Số trang"),
+    pageSize: int = Query(20, ge=1, le=100, description="Kích thước trang"),
+    userId: str | None = Query(None, description="Lọc theo User ID"),
 ) -> JSONResponse:
     """
     Retrieves all cashback records or filtered by userId (Admin only).

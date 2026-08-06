@@ -65,6 +65,15 @@ def get_commission_rate() -> float:
     return get_settings().commission_rate
 
 
+@require_value(detail="payment_min_amount_not_found", status_code=500)
+def get_payment_min_amount() -> float:
+    """
+    Retrieves the minimum payment amount for reconciliation from settings.
+    """
+    return get_settings().payment_min_amount
+
+
+
 def get_model_data(model: Any, by_alias: bool = False) -> dict[str, Any]:
     """
     Safely serializes a Pydantic model to dictionary across Pydantic v1 & v2.

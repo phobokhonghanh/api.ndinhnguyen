@@ -52,20 +52,21 @@ def parse_shopee_link(link: str) -> dict[str, str]:
 
 import re
 
-# Regex khớp chính xác UUID v4 / UUID chuẩn (36 ký tự) ở CUỐI chuỗi ($)
+# Regex khớp User ID (UUID 32 hoặc 36 ký tự có/không có dấu -) ở CUỐI chuỗi ($)
 UUID_SUFFIX_REGEX = re.compile(
-    r"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$"
+    r"([0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12})$"
 )
 
 def extract_user_id_from_utm(utm_content: str | None) -> str | None:
     """
-    Trích xuất UUID 36 ký tự ở cuối chuỗi utm_content.
+    Trích xuất User ID (UUID 32 hoặc 36 ký tự) ở cuối chuỗi utm_content và loại bỏ dấu '-'.
     """
     if not utm_content:
         return None
     
     match = UUID_SUFFIX_REGEX.search(utm_content.strip())
-    return match.group(1) if match else None
+    return match.group(1).replace("-", "") if match else None
+
 
 def create_affiliate_link(
     item_id: str,
@@ -121,7 +122,7 @@ async def fetch_prod_alt_by_link(link: str) -> Product | None:
 def calculate_commission_cashback(
     commission: float
 ) -> float:
-    return commission * get_commission_rate()
+    return float(int(commission * get_commission_rate()))
 
 def map_raw_to_schema_product(raw: dict[str, object], source: str = DATA_SOURCE.SHOPEE_API) -> Product:
     commission_amount = 0

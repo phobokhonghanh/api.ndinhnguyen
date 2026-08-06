@@ -6,6 +6,7 @@ ENVIRONMENT=development
 
 SHOPEE_COOKIE=replace-me
 COMMISSION_RATE=0.5
+PAYMENT_MIN_AMOUNT=50000.0
 
 # Google Auth & Session Configurations
 JWT_SECRET=replace-me-with-a-secure-secret-key-at-least-32-chars

@@ -11,9 +11,14 @@ from features.cashbacks.shopee.schemas import (
     Conversion,
 )
 
-router = APIRouter()
+router = APIRouter(tags=["Shopee Affiliate"])
 
-@router.post("/api/shopee/affiliate", response_model=Response[AffiliateResponseData])
+@router.post(
+    "/api/shopee/affiliate",
+    response_model=Response[AffiliateResponseData],
+    summary="Tạo link Shopee Affiliate từ đường dẫn sản phẩm",
+    description="Phân tích đường dẫn sản phẩm Shopee, lấy thông tin metadata sản phẩm và chuyển đổi sang link Affiliate có gắn tracking sub_ids.",
+)
 async def create_shopee_affiliate(payload: AffiliateRequest) -> JSONResponse:
     """
     Parses a Shopee product link, fetches its metadata, and converts it to a formatted affiliate link.
@@ -48,13 +53,18 @@ async def create_shopee_affiliate(payload: AffiliateRequest) -> JSONResponse:
     # 6. Return response
     return json_response(data=affiliate_response_data)
 
-@router.get("/api/shopee/conversions", response_model=Response[list[Conversion]])
+@router.get(
+    "/api/shopee/conversions",
+    response_model=Response[list[Conversion]],
+    summary="Lấy báo cáo chuyển đổi (Conversion) từ Shopee Affiliate của người dùng",
+    description="Truy xuất dữ liệu chuyển đổi mua hàng từ Shopee Affiliate API trong khoảng thời gian mua sắm.",
+)
 async def get_shopee_conversions(
     request: Request,
-    page_size: int = Query(20, ge=1, le=100),
-    page_num: int = Query(1, ge=1),
-    purchase_time_s: int = Query(...),
-    purchase_time_e: int = Query(...),
+    page_size: int = Query(20, ge=1, le=100, description="Kích thước trang"),
+    page_num: int = Query(1, ge=1, description="Số trang"),
+    purchase_time_s: int = Query(..., description="Thời gian mua sắm bắt đầu (Unix timestamp - giây)"),
+    purchase_time_e: int = Query(..., description="Thời gian mua sắm kết thúc (Unix timestamp - giây)"),
 ) -> JSONResponse:
     """
     Retrieves conversion reports from Shopee Affiliate API for the logged-in user.
@@ -78,14 +88,19 @@ async def get_shopee_conversions(
     )
     return json_response(data=conversions, pagination=pagination)
 
-@router.get("/api/admin/shopee/conversions", response_model=Response[list[Conversion]])
+@router.get(
+    "/api/admin/shopee/conversions",
+    response_model=Response[list[Conversion]],
+    summary="Lấy báo cáo chuyển đổi Shopee Affiliate (Admin only)",
+    description="Truy xuất chuyển đổi Shopee cho tất cả người dùng hoặc lọc theo sub_id cụ thể.",
+)
 async def get_admin_shopee_conversions(
     request: Request,
-    page_size: int = Query(20, ge=1, le=100),
-    page_num: int = Query(1, ge=1),
-    sub_id: str | None = Query(None),
-    purchase_time_s: int = Query(...),
-    purchase_time_e: int = Query(...),
+    page_size: int = Query(20, ge=1, le=100, description="Kích thước trang"),
+    page_num: int = Query(1, ge=1, description="Số trang"),
+    sub_id: str | None = Query(None, description="Lọc theo User ID / sub_id"),
+    purchase_time_s: int = Query(..., description="Thời gian bắt đầu (Unix timestamp - giây)"),
+    purchase_time_e: int = Query(..., description="Thời gian kết thúc (Unix timestamp - giây)"),
 ) -> JSONResponse:
     """
     Retrieves Shopee conversion reports (Admin only).
@@ -111,12 +126,16 @@ async def get_admin_shopee_conversions(
     return json_response(data=conversions, pagination=pagination)
 
 
-@router.post("/api/admin/shopee/conversions/sync")
+@router.post(
+    "/api/admin/shopee/conversions/sync",
+    summary="Đồng bộ thủ công các bản ghi Cashback từ Shopee (Admin only)",
+    description="Kích hoạt đồng bộ chuyển đổi từ Shopee API sang cơ sở dữ liệu Cashback của hệ thống.",
+)
 async def sync_shopee_cashbacks(
     request: Request,
-    purchase_time_s: int | None = Query(None),
-    purchase_time_e: int | None = Query(None),
-    sub_id: str | None = Query(None),
+    purchase_time_s: int | None = Query(None, description="Thời gian bắt đầu (Unix timestamp)"),
+    purchase_time_e: int | None = Query(None, description="Thời gian kết thúc (Unix timestamp)"),
+    sub_id: str | None = Query(None, description="Lọc theo User ID / sub_id"),
 ) -> JSONResponse:
     """
     Triggers manual sync of Shopee conversions into the cashback module.
@@ -134,5 +153,3 @@ async def sync_shopee_cashbacks(
         sub_id=sub_id,
     )
     return json_response(data={"synced_count": synced_count})
-
-

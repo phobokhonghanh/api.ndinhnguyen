@@ -3,7 +3,8 @@ from fastapi import FastAPI, HTTPException, Request
 from core.responses import json_response, Response
 
 from api.middleware import security_middleware
-from api.routes import bookmarks, categories, health, stats, shopee, auth, cashbacks
+from api.routes import bookmarks, categories, health, stats, shopee, auth, cashbacks, users, payments, banks
+
 
 # Configure logging
 logging.basicConfig(
@@ -38,6 +39,10 @@ def create_app() -> FastAPI:
     app.include_router(shopee.router)
     app.include_router(auth.router)
     app.include_router(cashbacks.router)
+    app.include_router(users.router)
+    app.include_router(payments.router)
+    app.include_router(banks.router)
+
 
     from fastapi.openapi.utils import get_openapi
     def custom_openapi():

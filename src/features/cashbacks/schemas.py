@@ -12,5 +12,7 @@ class CashbackRecord(BaseModel):
     status: str
     checkout_id: str = Field(..., alias="checkoutId")
     conversion: Conversion | None = None
+    payment_id: str | None = Field(None, alias="paymentId")
     created_at: str | None = Field(None, alias="createdAt")
     updated_at: str | None = Field(None, alias="updatedAt")
+

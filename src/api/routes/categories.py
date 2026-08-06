@@ -10,7 +10,7 @@ from features.bookmarks.schemas import CategoryInput, CategoryTreeNode
 from typing import Any
 
 
-router = APIRouter()
+router = APIRouter(tags=["Categories"])
 
 
 @router.get("/api/categories", response_model=Response[list[CategoryTreeNode]])

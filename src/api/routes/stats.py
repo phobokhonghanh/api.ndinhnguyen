@@ -8,7 +8,7 @@ from features.stats.schemas import StatsCommand, StatsResponse
 from features.stats.service import StatsService
 
 
-router = APIRouter()
+router = APIRouter(tags=["Stats & Telemetry"])
 
 
 @router.post("/api/stats", response_model=StatsResponse)

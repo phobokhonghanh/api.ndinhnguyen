@@ -8,14 +8,21 @@ from api.helpers import get_settings
 from core.responses import json_response, Response
 
 
-PUBLIC_API_PATHS = {
+PUBLIC_API_PREFIXES = (
     "/api/stats",
     "/api/shopee/affiliate",
     "/api/shopee/conversions",
     "/api/auth/google/login",
     "/api/auth/google/logout",
     "/api/cashbacks",
-}
+    "/api/user/payment-info",
+    "/api/user/dashboard",
+    "/api/payments",
+    "/api/banks",
+)
+
+PUBLIC_API_PATHS = set(PUBLIC_API_PREFIXES)
+
 
 
 async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
@@ -42,17 +49,24 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
 
             payload = verify_jwt(supplied, settings.jwt_secret)
             if payload:
-                user_context = payload
+                user_context = dict(payload)
+                if "sub" in user_context and isinstance(user_context["sub"], str):
+                    user_context["sub"] = user_context["sub"].replace("-", "")
 
     request.state.user = user_context
+
 
     # 2. CORS or method checks
     if request.method == "OPTIONS":
         api_response = json_response(Response(ok=True, code="ok"))
-    elif (
-        request.url.path.startswith("/api/")
-        and request.url.path not in PUBLIC_API_PATHS
-    ):
+    elif path.startswith("/api/admin/"):
+        if not request.state.user:
+            api_response = json_response(Response(ok=False, code="auth_invalid"), 401)
+        elif request.state.user.get("role") != "admin":
+            api_response = json_response(Response(ok=False, code="auth_forbidden"), 403)
+        else:
+            api_response = await call_next(request)
+    elif path.startswith("/api/") and not any(path.startswith(prefix) for prefix in PUBLIC_API_PREFIXES):
         if not request.state.user:
             api_response = json_response(Response(ok=False, code="auth_invalid"), 401)
         elif request.state.user.get("role") != "admin":
@@ -61,6 +75,7 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
             api_response = await call_next(request)
     else:
         api_response = await call_next(request)
+
 
 
     if origin and (settings.environment == "development" or origin in settings.allowed_origins):

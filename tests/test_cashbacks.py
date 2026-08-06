@@ -62,10 +62,30 @@ class MockD1DB:
             name TEXT,
             picture TEXT,
             role TEXT NOT NULL,
+            bank_code TEXT,
+            account_number TEXT,
+            account_name TEXT,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP,
             updated_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
         """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS payments (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          amount REAL NOT NULL,
+          cashback_count INTEGER NOT NULL,
+          status TEXT NOT NULL DEFAULT 'Pending',
+          bank_code TEXT,
+          account_number TEXT,
+          account_name TEXT,
+          paid_at TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY(user_id) REFERENCES users(id)
+        );
+        """)
+
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS cashbacks (
           id TEXT PRIMARY KEY,
@@ -75,14 +95,18 @@ class MockD1DB:
           status TEXT NOT NULL DEFAULT 'Pending',
           checkout_id TEXT NOT NULL,
           conversion TEXT NOT NULL,
+          payment_id TEXT,
           created_at TEXT DEFAULT CURRENT_TIMESTAMP,
           updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY(user_id) REFERENCES users(id)
+          FOREIGN KEY(user_id) REFERENCES users(id),
+          FOREIGN KEY(payment_id) REFERENCES payments(id)
         );
         """)
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_cashbacks_platform_checkout ON cashbacks(platform, checkout_id);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_cashbacks_user_id ON cashbacks(user_id);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_cashbacks_payment_id ON cashbacks(payment_id);")
         self.conn.commit()
+
 
 
     def prepare(self, sql):
@@ -159,68 +183,78 @@ def test_sync_non_admin():
 
 
 def test_sync_admin_and_verify_cashback_flows():
-    fake_report = {
-        "code": 0,
-        "msg": "success",
-        "data": {
-            "page_num": 1,
-            "page_size": 100,
-            "total_count": 2,
-            "list": [
-                {
-                    "purchase_time": 1782402700,
-                    "checkout_id": "checkout_abc",
-                    "checkout_status": "Pending",
-                    "affiliate_id": 17314780502,
-                    "affiliate_net_commission": 200000,
-                    "utm_content": "some-usr_123",
-                    "orders": [
-                        {
-                            "order_id": 111,
-                            "order_sn": "order_111",
-                            "items": [
-                                {
-                                     "item_name": "Product A",
-                                     "item_commission": 200000,
-                                     "actual_amount": 1000000,
-                                     "item_price": 1000000,
-                                     "is_fraud": 0,
-                                     "platform_commission_rate": 2000,
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "purchase_time": 1782402800,
-                    "checkout_id": "checkout_xyz",
-                    "checkout_status": "Completed",
-                    "affiliate_id": 17314780502,
-                    "affiliate_net_commission": 400000,
-                    "utm_content": "some-usr_456",
-                    "orders": [
-                        {
-                            "order_id": 222,
-                            "order_sn": "order_222",
-                            "items": [
-                                {
-                                     "item_name": "Product B",
-                                     "item_commission": 400000,
-                                     "actual_amount": 2000000,
-                                     "item_price": 2000000,
-                                     "is_fraud": 0,
-                                     "platform_commission_rate": 4000,
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
-        }
-    }
-    fake_fetch.return_value = MockJSResponse(200, json.dumps(fake_report))
+    tc = CashbackTestClient()
+    u1_id = "00000000-0000-0000-0000-000000000123"
+    u2_id = "00000000-0000-0000-0000-000000000456"
+    # Seed users in mock db
+    cursor = tc.db.conn.cursor()
+    cursor.execute("INSERT INTO users (id, email, role) VALUES (?, 'u1_uuid@test.com', 'user')", (u1_id,))
+    cursor.execute("INSERT INTO users (id, email, role) VALUES (?, 'u2_uuid@test.com', 'user')", (u2_id,))
+    tc.db.conn.commit()
 
-    with CashbackTestClient() as client:
+    with tc as client:
+
+        fake_report = {
+            "code": 0,
+            "msg": "success",
+            "data": {
+                "page_num": 1,
+                "page_size": 100,
+                "total_count": 2,
+                "list": [
+                    {
+                        "purchase_time": 1782402700,
+                        "checkout_id": "checkout_abc",
+                        "checkout_status": "Pending",
+                        "affiliate_id": 17314780502,
+                        "affiliate_net_commission": 200000,
+                        "utm_content": f"some-{u1_id}",
+                        "orders": [
+                            {
+                                "order_id": 111,
+                                "order_sn": "order_111",
+                                "items": [
+                                    {
+                                         "item_name": "Product A",
+                                         "item_commission": 200000,
+                                         "actual_amount": 1000000,
+                                         "item_price": 1000000,
+                                         "is_fraud": 0,
+                                         "platform_commission_rate": 2000,
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "purchase_time": 1782402800,
+                        "checkout_id": "checkout_xyz",
+                        "checkout_status": "Completed",
+                        "affiliate_id": 17314780502,
+                        "affiliate_net_commission": 400000,
+                        "utm_content": f"some-{u2_id}",
+                        "orders": [
+                            {
+                                "order_id": 222,
+                                "order_sn": "order_222",
+                                "items": [
+                                    {
+                                         "item_name": "Product B",
+                                         "item_commission": 400000,
+                                         "actual_amount": 2000000,
+                                         "item_price": 2000000,
+                                         "is_fraud": 0,
+                                         "platform_commission_rate": 4000,
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+        fake_fetch.return_value = MockJSResponse(200, json.dumps(fake_report))
+
         # 1. Sync cashbacks as admin
         sync_res = client.post(
             "/api/admin/shopee/conversions/sync",
@@ -230,8 +264,8 @@ def test_sync_admin_and_verify_cashback_flows():
         assert sync_res.json()["ok"] is True
         assert sync_res.json()["data"]["synced_count"] == 2
 
-        # 2. Verify usr_123 sees their pending cashback
-        u1_token = generate_jwt({"sub": "usr_123", "email": "u1@test.com", "role": "user"}, "secret_jwt")
+        # 2. Verify u1 sees their pending cashback
+        u1_token = generate_jwt({"sub": u1_id, "email": "u1_uuid@test.com", "role": "user"}, "secret_jwt")
         res1 = client.get(
             "/api/cashbacks",
             headers={"Authorization": f"Bearer {u1_token}"}
@@ -246,11 +280,11 @@ def test_sync_admin_and_verify_cashback_flows():
         assert data1[0]["conversion"]["orders"][0]["items"][0]["actual_amount"] == 10.0
         assert len(data1[0]["conversion"]["orders"][0]["items"]) == 1
         assert data1[0]["conversion"]["orders"][0]["items"][0]["product"]["name"] == "Product A"
-        assert data1[0]["conversion"]["orders"][0]["items"][0]["product"]["commission"] == 2.0
+        assert data1[0]["conversion"]["orders"][0]["items"][0]["product"]["commission"] == 1.0
         assert data1[0]["conversion"]["orders"][0]["items"][0]["product"]["price"] == 10.0
 
-        # 3. Verify usr_456 sees their approved cashback
-        u2_token = generate_jwt({"sub": "usr_456", "email": "u2@test.com", "role": "user"}, "secret_jwt")
+        # 3. Verify u2 sees their approved cashback
+        u2_token = generate_jwt({"sub": u2_id, "email": "u2_uuid@test.com", "role": "user"}, "secret_jwt")
         res2 = client.get(
             "/api/cashbacks",
             headers={"Authorization": f"Bearer {u2_token}"}
@@ -280,7 +314,7 @@ def test_sync_admin_and_verify_cashback_flows():
                         "checkout_status": "Completed", # Status changed to Completed
                         "affiliate_id": 17314780502,
                         "affiliate_net_commission": 200000,
-                        "utm_content": "some-usr_123",
+                        "utm_content": f"some-{u1_id}",
                         "orders": [
                             {
                                 "order_id": 111,

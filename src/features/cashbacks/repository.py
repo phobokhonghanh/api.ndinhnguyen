@@ -16,10 +16,11 @@ def _cashback(row) -> CashbackRecord:
         id=row_value(row, "id"),
         user_id=row_value(row, "user_id"),
         platform=row_value(row, "platform"),
-        cashback=row_value(row, "cashback_amount"),
+        cashback=float(int(float(row_value(row, "cashback_amount") or 0))),
         status=row_value(row, "status"),
         checkout_id=row_value(row, "checkout_id"),
         conversion=conversion_dict,
+        payment_id=row_value(row, "payment_id"),
         created_at=row_value(row, "created_at"),
         updated_at=row_value(row, "updated_at"),
     )
@@ -29,7 +30,7 @@ async def get_cashback_by_key(
 ) -> CashbackRecord | None:
     row = await first(
         db.prepare(
-            """SELECT id, user_id, platform, cashback_amount, status, checkout_id, conversion, created_at, updated_at
+            """SELECT id, user_id, platform, cashback_amount, status, checkout_id, conversion, payment_id, created_at, updated_at
                FROM cashbacks
                WHERE platform = ? AND checkout_id = ?
                LIMIT 1"""
@@ -47,8 +48,8 @@ async def insert_cashback(db, data: CashbackRecord) -> None:
     conversion_str = json.dumps(conversion_dict)
     await db.prepare(
         """INSERT INTO cashbacks (
-             id, user_id, platform, cashback_amount, status, checkout_id, conversion
-           ) VALUES (?, ?, ?, ?, ?, ?, ?)"""
+             id, user_id, platform, cashback_amount, status, checkout_id, conversion, payment_id
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
     ).bind(
         data.id,
         data.user_id,
@@ -56,7 +57,8 @@ async def insert_cashback(db, data: CashbackRecord) -> None:
         data.cashback,
         data.status or CASHBACK_STATUS_PENDING,
         data.checkout_id,
-        conversion_str
+        conversion_str,
+        data.payment_id,
     ).run()
 
 async def update_cashback(
@@ -81,7 +83,7 @@ async def update_cashback(
 async def get_cashbacks_by_user(db, user_id: str) -> list[CashbackRecord]:
     result_rows = await rows(
         db.prepare(
-            """SELECT id, user_id, platform, cashback_amount, status, checkout_id, conversion, created_at, updated_at
+            """SELECT id, user_id, platform, cashback_amount, status, checkout_id, conversion, payment_id, created_at, updated_at
                FROM cashbacks
                WHERE user_id = ?
                ORDER BY created_at DESC"""
@@ -111,7 +113,7 @@ async def list_cashbacks_paginated(
     if user_id:
         result_rows = await rows(
             db.prepare(
-                """SELECT id, user_id, platform, cashback_amount, status, checkout_id, conversion, created_at, updated_at
+                """SELECT id, user_id, platform, cashback_amount, status, checkout_id, conversion, payment_id, created_at, updated_at
                    FROM cashbacks
                    WHERE user_id = ?
                    ORDER BY created_at DESC
@@ -121,10 +123,11 @@ async def list_cashbacks_paginated(
     else:
         result_rows = await rows(
             db.prepare(
-                """SELECT id, user_id, platform, cashback_amount, status, checkout_id, conversion, created_at, updated_at
+                """SELECT id, user_id, platform, cashback_amount, status, checkout_id, conversion, payment_id, created_at, updated_at
                    FROM cashbacks
                    ORDER BY created_at DESC
                    LIMIT ? OFFSET ?"""
             ).bind(page_size, offset)
         )
     return [_cashback(row) for row in result_rows]
+
