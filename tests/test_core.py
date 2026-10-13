@@ -48,4 +48,17 @@ def test_app_settings_parses_addlivetag_api_key():
     assert settings.addlivetag_api_key == "test_addlivetag_key"
 
 
+def test_app_settings_parses_telegram_configs():
+    settings = AppSettings.from_env(
+        SimpleNamespace(
+            TELEGRAM_BOT_TOKEN="123456:ABC-DEF",
+            TELEGRAM_CHAT_ID="-100987654321",
+            TELEGRAM_THREAD_ID="42",
+        )
+    )
+    assert settings.telegram_bot_token == "123456:ABC-DEF"
+    assert settings.telegram_chat_id == "-100987654321"
+    assert settings.telegram_thread_id == "42"
+
+
 

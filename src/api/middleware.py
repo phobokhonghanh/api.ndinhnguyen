@@ -78,6 +78,49 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
 
 
 
+    # 3. Telegram error notifications for sync endpoints != 200 and 500 status codes
+    SHOPEE_SYNC_PATHS = {
+        "/api/admin/shopee/conversions/sync",
+        "/api/shopee/conversions",
+        "/api/admin/shopee/conversions",
+    }
+    from infra.telegram import dispatch_telegram_error, telegram_error_notified
+
+    if not getattr(request.state, "telegram_notified", False) and not telegram_error_notified.get():
+        if path in SHOPEE_SYNC_PATHS and api_response.status_code != 200:
+            request.state.telegram_notified = True
+            body_content = getattr(api_response, "body", None)
+            content_val: Any = body_content
+            if isinstance(body_content, bytes):
+                import json
+                try:
+                    content_val = json.loads(body_content.decode("utf-8"))
+                except Exception:
+                    content_val = body_content.decode("utf-8")
+            dispatch_telegram_error(
+                feature="Shopee Sync",
+                code=api_response.status_code,
+                content=content_val,
+                is_external=True,
+            )
+        elif api_response.status_code == 500:
+            request.state.telegram_notified = True
+            feature = "Product" if ("product" in path or "shopee" in path) else "System"
+            body_content = getattr(api_response, "body", None)
+            content_val = body_content
+            if isinstance(body_content, bytes):
+                import json
+                try:
+                    content_val = json.loads(body_content.decode("utf-8"))
+                except Exception:
+                    content_val = body_content.decode("utf-8")
+            dispatch_telegram_error(
+                feature=feature,
+                code=500,
+                content=content_val,
+                is_external=False,
+            )
+
     if origin and (settings.environment == "development" or origin in settings.allowed_origins):
         api_response.headers["Access-Control-Allow-Origin"] = origin
         api_response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type"

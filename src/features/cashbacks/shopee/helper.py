@@ -10,7 +10,8 @@ from core.constants import (
     SHOPEE_PRODUCT_LINK_TEMPLATE,
     MICRO_UNIT_SCALE,
 )
-from infra.http import fetch_json
+from infra.http import fetch_json, HttpError
+from infra.telegram import dispatch_telegram_error
 from features.cashbacks.shopee.schemas import Product, Item, Order, Conversion
 
 T = TypeVar('T')
@@ -112,13 +113,35 @@ async def fetch_prod_alt_by_link(link: str, api_key: str | None = None) -> Produ
     headers = {"X-API-Key": key} if key else {}
     try:
         data = await fetch_json(url, headers=headers)
-        if data.get("status") == "success" and data.get("productInfo") is not None:
+        if isinstance(data, dict) and data.get("status") == "success" and data.get("productInfo") is not None:
             prod_info = data["productInfo"]
             # ProductName and price must be present and not null
             if prod_info.get("productName") and prod_info.get("price") is not None:
                 return map_raw_to_schema_product(prod_info, DATA_SOURCE.THIRD_PARTY)
+
+        # Notify if response received but not success or missing productInfo
+        dispatch_telegram_error(
+            feature="Addlivetag",
+            code=data.get("code") or data.get("status") or 400 if isinstance(data, dict) else 400,
+            content=data,
+            is_external=True,
+        )
+    except HttpError as e:
+        print(f"Error fetching product data: {e}")
+        dispatch_telegram_error(
+            feature="Addlivetag",
+            code=e.status,
+            content={"error": str(e), "url": e.url},
+            is_external=True,
+        )
     except Exception as e:
         print(f"Error fetching product data: {e}")
+        dispatch_telegram_error(
+            feature="Addlivetag",
+            code=500,
+            content={"error": str(e)},
+            is_external=True,
+        )
     return None
 
 def calculate_commission_cashback(

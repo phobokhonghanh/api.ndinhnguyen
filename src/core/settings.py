@@ -19,6 +19,9 @@ class AppSettings:
     commission_rate: float = 0.5
     payment_min_amount: float = 50000.0
     addlivetag_api_key: str = ""
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
+    telegram_thread_id: str = ""
 
     @classmethod
     def from_env(cls, env: Any) -> "AppSettings":
@@ -53,5 +56,8 @@ class AppSettings:
             commission_rate=commission_rate,
             payment_min_amount=payment_min_amount,
             addlivetag_api_key=addlivetag_api_key,
+            telegram_bot_token=env_value(env, "TELEGRAM_BOT_TOKEN"),
+            telegram_chat_id=env_value(env, "TELEGRAM_CHAT_ID"),
+            telegram_thread_id=env_value(env, "TELEGRAM_THREAD_ID"),
         )
 

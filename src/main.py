@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, Request
 from core.responses import json_response, Response
 
 from api.middleware import security_middleware
+from infra.telegram import dispatch_telegram_error
 from api.routes import bookmarks, categories, health, stats, shopee, auth, cashbacks, users, payments, banks
 
 
@@ -25,11 +26,30 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
+        if exc.status_code == 500:
+            path = request.url.path
+            feature = "Product" if ("product" in path or "shopee" in path) else "System"
+            request.state.telegram_notified = True
+            dispatch_telegram_error(
+                feature=feature,
+                code=500,
+                content=exc.detail,
+                is_external=False,
+            )
         return json_response(ok=False, code=exc.detail, status_code=exc.status_code)
 
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):
         logger.error("Unhandled exception occurred", exc_info=exc)
+        path = request.url.path
+        feature = "Product" if ("product" in path or "shopee" in path) else "System"
+        request.state.telegram_notified = True
+        dispatch_telegram_error(
+            feature=feature,
+            code=500,
+            content=str(exc) or "unknown_error",
+            is_external=False,
+        )
         return json_response(ok=False, code="unknown_error", status_code=500)
 
     app.include_router(health.router)

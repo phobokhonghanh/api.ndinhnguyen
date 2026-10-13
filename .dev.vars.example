@@ -11,6 +11,11 @@ PAYMENT_MIN_AMOUNT=50000.0
 # Addlivetag API Configurations
 ADDLIVETAG_API_KEY=replace-me
 
+# Telegram Bot Notifications
+TELEGRAM_BOT_TOKEN=replace-me-with-your-telegram-bot-token
+TELEGRAM_CHAT_ID=replace-me-with-your-telegram-chat-id
+TELEGRAM_THREAD_ID=
+
 # Google Auth & Session Configurations
 JWT_SECRET=replace-me-with-a-secure-secret-key-at-least-32-chars
 GOOGLE_CLIENT_ID=replace-me-with-your-google-oauth-client-id.apps.googleusercontent.com

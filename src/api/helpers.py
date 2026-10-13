@@ -80,6 +80,18 @@ def get_addlivetag_api_key() -> str:
     return get_settings().addlivetag_api_key
 
 
+def get_env_telegram() -> tuple[str, str, str]:
+    """
+    Retrieves Telegram configuration (bot_token, chat_id, thread_id) from settings.
+    """
+    settings = get_settings()
+    return (
+        settings.telegram_bot_token,
+        settings.telegram_chat_id,
+        settings.telegram_thread_id,
+    )
+
+
 
 def get_model_data(model: Any, by_alias: bool = False) -> dict[str, Any]:
     """

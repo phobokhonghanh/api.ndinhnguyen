@@ -15,6 +15,8 @@ from features.cashbacks.shopee.helper import (
 from features.cashbacks.shopee.client import ShopeeAffiliateClient
 from features.cashbacks.shopee.adapter import ShopeePlatformAdapter
 from core.constants import MICRO_UNIT_SCALE
+from infra.http import HttpError
+from infra.telegram import dispatch_telegram_error
 
 async def fetch_conversion_reports(
     page_size: int = 20,
@@ -29,14 +31,38 @@ async def fetch_conversion_reports(
     """
     client = ShopeeAffiliateClient()
     adapter = ShopeePlatformAdapter()
-    res = await client.get_conversion_reports(
-        page_size=page_size,
-        page_num=page_num,
-        sub_id=sub_id,
-        purchase_time_s=purchase_time_s,
-        purchase_time_e=purchase_time_e,
-    )
+    try:
+        res = await client.get_conversion_reports(
+            page_size=page_size,
+            page_num=page_num,
+            sub_id=sub_id,
+            purchase_time_s=purchase_time_s,
+            purchase_time_e=purchase_time_e,
+        )
+    except HttpError as e:
+        dispatch_telegram_error(
+            feature="Shopee Sync",
+            code=e.status,
+            content={"error": str(e), "url": e.url},
+            is_external=True,
+        )
+        raise HTTPException(status_code=502, detail=f"shopee_api: HTTP error {e.status}")
+    except Exception as e:
+        dispatch_telegram_error(
+            feature="Shopee Sync",
+            code=500,
+            content={"error": str(e)},
+            is_external=True,
+        )
+        raise
+
     if res.get("code") != 0 or res.get("msg") != "success":
+        dispatch_telegram_error(
+            feature="Shopee Sync",
+            code=res.get("code", 502),
+            content=res,
+            is_external=True,
+        )
         raise HTTPException(status_code=502, detail=f"shopee_api: {res.get('code')} - msg={res.get('msg', 'error')}")
     
     data = res.get("data", {})

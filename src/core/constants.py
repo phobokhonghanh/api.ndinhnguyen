@@ -3,6 +3,11 @@ GOOGLE_TOKENINFO_URL_TEMPLATE = (
     "https://oauth2.googleapis.com/tokeninfo?id_token={id_token}"
 )
 
+# Telegram Bot API Endpoints
+TELEGRAM_SEND_MESSAGE_URL_TEMPLATE = (
+    "https://api.telegram.org/bot{token}/sendMessage"
+)
+
 # Shopee Integration Endpoints
 SHOPEE_PRODUCT_DATA_URL_TEMPLATE = (
     "https://data.addlivetag.com/product-data/product-data.php?url={link}"
