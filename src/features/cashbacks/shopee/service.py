@@ -137,6 +137,12 @@ async def save_conversions_to_db(db, records: list[Conversion]) -> int:
         except Exception as e:
             checkout_id = record.checkout_id or 'Unknown'
             print(f"Error saving cashback for User ID: {user_id} - Checkout ID: {checkout_id} - Error: {e}")
+            await dispatch_telegram_error(
+                feature="Shopee Sync",
+                code=500,
+                content=f"Save cashback error checkout {checkout_id}: {e}",
+                is_external=False,
+            )
     return synced_count
 
 async def sync_shopee_cashbacks(
