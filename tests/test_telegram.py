@@ -191,7 +191,7 @@ def test_notify_telegram_error():
         worker_env.reset(token)
 
 
-def test_dispatch_telegram_error_in_event_loop():
+def test_dispatch_telegram_error():
     from infra.telegram import dispatch_telegram_error, telegram_error_notified
 
     token = worker_env.set(
@@ -206,15 +206,14 @@ def test_dispatch_telegram_error_in_event_loop():
         async def run_dispatch():
             with patch("infra.telegram.post_json", new_callable=AsyncMock) as mock_post:
                 mock_post.return_value = {"ok": True}
-                task = dispatch_telegram_error(
+                success = await dispatch_telegram_error(
                     feature="Shopee Sync",
                     code=502,
                     content={"error": "sync failed"},
                     is_external=True,
                 )
-                assert task is not None
+                assert success is True
                 assert telegram_error_notified.get() is True
-                await task
                 assert mock_post.called
 
         asyncio.run(run_dispatch())

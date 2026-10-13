@@ -40,7 +40,7 @@ async def fetch_conversion_reports(
             purchase_time_e=purchase_time_e,
         )
     except HttpError as e:
-        dispatch_telegram_error(
+        await dispatch_telegram_error(
             feature="Shopee Sync",
             code=e.status,
             content={"error": str(e), "url": e.url},
@@ -48,7 +48,7 @@ async def fetch_conversion_reports(
         )
         raise HTTPException(status_code=502, detail=f"shopee_api: HTTP error {e.status}")
     except Exception as e:
-        dispatch_telegram_error(
+        await dispatch_telegram_error(
             feature="Shopee Sync",
             code=500,
             content={"error": str(e)},
@@ -57,7 +57,7 @@ async def fetch_conversion_reports(
         raise
 
     if res.get("code") != 0 or res.get("msg") != "success":
-        dispatch_telegram_error(
+        await dispatch_telegram_error(
             feature="Shopee Sync",
             code=res.get("code", 502),
             content=res,

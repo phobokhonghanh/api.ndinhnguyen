@@ -97,7 +97,7 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
                     content_val = json.loads(body_content.decode("utf-8"))
                 except Exception:
                     content_val = body_content.decode("utf-8")
-            dispatch_telegram_error(
+            await dispatch_telegram_error(
                 feature="Shopee Sync",
                 code=api_response.status_code,
                 content=content_val,
@@ -114,7 +114,7 @@ async def security_middleware(request: Request, call_next: Any) -> JSONResponse:
                     content_val = json.loads(body_content.decode("utf-8"))
                 except Exception:
                     content_val = body_content.decode("utf-8")
-            dispatch_telegram_error(
+            await dispatch_telegram_error(
                 feature=feature,
                 code=500,
                 content=content_val,

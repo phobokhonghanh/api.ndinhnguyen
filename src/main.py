@@ -30,7 +30,7 @@ def create_app() -> FastAPI:
             path = request.url.path
             feature = "Product" if ("product" in path or "shopee" in path) else "System"
             request.state.telegram_notified = True
-            dispatch_telegram_error(
+            await dispatch_telegram_error(
                 feature=feature,
                 code=500,
                 content=exc.detail,
@@ -44,7 +44,7 @@ def create_app() -> FastAPI:
         path = request.url.path
         feature = "Product" if ("product" in path or "shopee" in path) else "System"
         request.state.telegram_notified = True
-        dispatch_telegram_error(
+        await dispatch_telegram_error(
             feature=feature,
             code=500,
             content=str(exc) or "unknown_error",

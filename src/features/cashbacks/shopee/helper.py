@@ -120,7 +120,7 @@ async def fetch_prod_alt_by_link(link: str, api_key: str | None = None) -> Produ
                 return map_raw_to_schema_product(prod_info, DATA_SOURCE.THIRD_PARTY)
 
         # Notify if response received but not success or missing productInfo
-        dispatch_telegram_error(
+        await dispatch_telegram_error(
             feature="Addlivetag",
             code=data.get("code") or data.get("status") or 400 if isinstance(data, dict) else 400,
             content=data,
@@ -128,7 +128,7 @@ async def fetch_prod_alt_by_link(link: str, api_key: str | None = None) -> Produ
         )
     except HttpError as e:
         print(f"Error fetching product data: {e}")
-        dispatch_telegram_error(
+        await dispatch_telegram_error(
             feature="Addlivetag",
             code=e.status,
             content={"error": str(e), "url": e.url},
@@ -136,7 +136,7 @@ async def fetch_prod_alt_by_link(link: str, api_key: str | None = None) -> Produ
         )
     except Exception as e:
         print(f"Error fetching product data: {e}")
-        dispatch_telegram_error(
+        await dispatch_telegram_error(
             feature="Addlivetag",
             code=500,
             content={"error": str(e)},

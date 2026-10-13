@@ -165,31 +165,28 @@ async def notify_telegram_error(
     )
 
 
-def dispatch_telegram_error(
+async def dispatch_telegram_error(
     feature: str,
     code: int | str,
     content: Any,
     is_external: bool = False,
     chat_id: str | None = None,
     thread_id: int | str | None = None,
-) -> Any:
+) -> bool:
     """
-    Dispatches a Telegram error notification as a non-blocking background task.
-    Returns the task if an event loop is available, else None.
+    Dispatches a Telegram error notification.
+    Awaited directly to guarantee execution before Cloudflare Worker lifecycle terminates.
     """
     telegram_error_notified.set(True)
-    import asyncio
     try:
-        loop = asyncio.get_running_loop()
-        return loop.create_task(
-            notify_telegram_error(
-                feature=feature,
-                code=code,
-                content=content,
-                is_external=is_external,
-                chat_id=chat_id,
-                thread_id=thread_id,
-            )
+        return await notify_telegram_error(
+            feature=feature,
+            code=code,
+            content=content,
+            is_external=is_external,
+            chat_id=chat_id,
+            thread_id=thread_id,
         )
-    except RuntimeError:
-        return None
+    except Exception as e:
+        logger.error(f"Failed to dispatch Telegram error notification: {e}")
+        return False
