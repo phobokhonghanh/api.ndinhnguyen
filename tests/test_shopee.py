@@ -113,6 +113,51 @@ def test_fetch_prod_alt_by_link_failure():
     assert product is None
 
 
+def test_fetch_prod_alt_by_link_with_api_key_header():
+    from unittest.mock import call
+    from core.context import worker_env
+    from types import SimpleNamespace
+
+    fake_payload = {
+        "status": "success",
+        "productInfo": {
+            "itemId": 1589295236,
+            "productName": "Áo Len Nam Nữ Cổ Lọ",
+            "price": 122200,
+            "productLink": "https://shopee.vn/product/38003654/1589295236",
+        },
+    }
+    fake_fetch.return_value = MockJSResponse(200, json.dumps(fake_payload))
+
+    # Test with direct api_key param
+    product = asyncio.run(
+        service.fetch_prod_alt_by_link(
+            "https://shopee.vn/product/38003654/1589295236",
+            api_key="custom_api_key",
+        )
+    )
+    assert product is not None
+    last_call = fake_fetch.call_args
+    assert "headers" in last_call.kwargs
+    headers_mock = last_call.kwargs["headers"]
+    headers_mock.append.assert_any_call("X-API-Key", "custom_api_key")
+
+    # Test with env variable ADDLIVETAG_API_KEY
+    token = worker_env.set(SimpleNamespace(ADDLIVETAG_API_KEY="env_api_key_123"))
+    try:
+        product_env = asyncio.run(
+            service.fetch_prod_alt_by_link(
+                "https://shopee.vn/product/38003654/1589295236"
+            )
+        )
+        assert product_env is not None
+        last_call_env = fake_fetch.call_args
+        headers_mock_env = last_call_env.kwargs["headers"]
+        headers_mock_env.append.assert_any_call("X-API-Key", "env_api_key_123")
+    finally:
+        worker_env.reset(token)
+
+
 def test_api_shopee_affiliate_success():
     fake_payload = {
         "status": "success",

@@ -83,3 +83,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_cashbacks_platform_checkout ON cashbacks(p
 CREATE INDEX IF NOT EXISTS idx_cashbacks_user_id ON cashbacks(user_id);
 CREATE INDEX IF NOT EXISTS idx_cashbacks_payment_id ON cashbacks(payment_id);
 
+-- 6. Khởi tạo lịch sử migrations của D1 để đồng bộ với schema mới nhất
+CREATE TABLE IF NOT EXISTS d1_migrations (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE,
+  applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO d1_migrations (name) VALUES 
+  ('0001_payment_workflow_and_user_id_clean.sql'),
+  ('0002_add_paid_at_to_payments.sql');
+
+

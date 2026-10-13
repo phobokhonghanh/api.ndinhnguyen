@@ -1,4 +1,4 @@
-from api.helpers import get_commission_rate
+from api.helpers import get_commission_rate, get_addlivetag_api_key
 from core.constants import DATA_SOURCE
 import re
 from typing import TypeVar, Type
@@ -106,10 +106,12 @@ def format_url_image(url: str | None) -> str | None:
         
     return f'https://cf.shopee.vn/file/{url}'
 
-async def fetch_prod_alt_by_link(link: str) -> Product | None:
+async def fetch_prod_alt_by_link(link: str, api_key: str | None = None) -> Product | None:
     url = SHOPEE_PRODUCT_DATA_URL_TEMPLATE.format(link=link)
+    key = api_key if api_key is not None else get_addlivetag_api_key()
+    headers = {"X-API-Key": key} if key else {}
     try:
-        data = await fetch_json(url)
+        data = await fetch_json(url, headers=headers)
         if data.get("status") == "success" and data.get("productInfo") is not None:
             prod_info = data["productInfo"]
             # ProductName and price must be present and not null

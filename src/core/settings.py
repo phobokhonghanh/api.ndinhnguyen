@@ -18,6 +18,7 @@ class AppSettings:
     shopee_cookie: str = ""
     commission_rate: float = 0.5
     payment_min_amount: float = 50000.0
+    addlivetag_api_key: str = ""
 
     @classmethod
     def from_env(cls, env: Any) -> "AppSettings":
@@ -39,6 +40,8 @@ class AppSettings:
         except (ValueError, TypeError):
             payment_min_amount = 50000.0
 
+        addlivetag_api_key = env_value(env, "ADDLIVETAG_API_KEY")
+
         return cls(
             admin_token=env_value(env, "ADMIN_TOKEN"),
             allowed_origins=frozenset(origins),
@@ -49,5 +52,6 @@ class AppSettings:
             shopee_cookie=env_value(env, "SHOPEE_COOKIE"),
             commission_rate=commission_rate,
             payment_min_amount=payment_min_amount,
+            addlivetag_api_key=addlivetag_api_key,
         )
 

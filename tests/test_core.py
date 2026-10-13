@@ -41,4 +41,11 @@ def test_public_api_paths():
     }
 
 
+def test_app_settings_parses_addlivetag_api_key():
+    settings = AppSettings.from_env(
+        SimpleNamespace(ADDLIVETAG_API_KEY="test_addlivetag_key")
+    )
+    assert settings.addlivetag_api_key == "test_addlivetag_key"
+
+
 

@@ -109,10 +109,11 @@ pip install uv
    ```
    *Lưu ý:* Hãy mở file `.dev.vars` lên để cấu hình các biến môi trường như `ADMIN_TOKEN`, `JWT_SECRET`, và các thông tin Google OAuth.
 
-4. **Khởi tạo Database SQLite:**
+4. **Khởi tạo Database SQLite (Cục bộ):**
    ```bash
-   npx wrangler d1 execute ndinhnguyen --local --file=schema.sql
+   make db-schema-local
    ```
+   *(Lệnh này chạy file `schema.sql` và tự động ghi nhận các migration hiện tại vào bảng lịch sử của D1 `d1_migrations` để đồng bộ)*
 
 5. **Chạy ứng dụng:**
    ```bash
@@ -215,11 +216,12 @@ make test
    ```
    *(Nhập giá trị token bảo mật cho API khi được yêu cầu)*
 
-2. **Khởi tạo cấu trúc Database trên Cloudflare D1 (Chạy 1 lần duy nhất):**
-   Bạn có thể dùng file `schema.sql` để tạo toàn bộ các bảng trực tiếp trên database remote của Cloudflare:
+2. **Khởi tạo cấu trúc Database trên Cloudflare D1 (Chạy 1 lần duy nhất khi tạo mới DB):**
+   Để khởi tạo cấu trúc bảng và lịch sử migration ban đầu trên database remote:
    ```bash
-   npx wrangler d1 execute ndinhnguyen --remote --file=schema.sql
+   make db-schema-remote
    ```
+   *(Hoặc chạy lệnh tương ứng: `npx wrangler d1 execute ndinhnguyen --remote --file=schema.sql`)*
 
 3. **Deploy mã nguồn lên Cloudflare:**
    ```bash
@@ -242,11 +244,12 @@ Nếu bạn kết nối trực tiếp kho chứa GitHub với Cloudflare Workers
    uv sync --extra dev && make deploy
    ```
 
-3. **Đồng bộ cơ sở dữ liệu khi có thay đổi:**
-   Khi deploy lần đầu hoặc khi có cập nhật cấu trúc bảng mới, chạy lệnh sau từ máy cục bộ để cập nhật database D1 remote:
+3. **Đồng bộ/Áp dụng các thay đổi database (Migrations) khi có cập nhật cấu trúc bảng:**
+   Khi deploy hoặc có cập nhật cấu trúc bảng mới (các file SQL mới trong thư mục `migrations/`), chạy lệnh sau để áp dụng các migrations mới lên database D1 remote:
    ```bash
-   npx wrangler d1 execute ndinhnguyen --remote --file=schema.sql
+   make db-migrate-remote
    ```
+   *(Hoặc chạy lệnh tương ứng: `npx wrangler d1 migrations apply ndinhnguyen --remote`)*
 
 ---
 

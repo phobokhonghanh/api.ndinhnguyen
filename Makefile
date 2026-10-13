@@ -1,4 +1,4 @@
-.PHONY: help install run dev deploy test db-schema-local db-schema-remote db-pull secret-put-admin-token logs logs-stop
+.PHONY: help install run dev deploy test db-schema-local db-migrate-local db-migrate-remote db-schema-remote db-pull secret-put-admin-token logs logs-stop
 
 
 WRANGLER ?= $(shell if command -v wrangler >/dev/null 2>&1; then echo wrangler; elif command -v npx >/dev/null 2>&1; then echo "npx wrangler"; else echo wrangler; fi)
@@ -13,9 +13,11 @@ help:
 		"make dev                (Dev) Start local Python Worker preview" \
 		"make test               (Dev) Run pytest" \
 		"make db-schema-local    (Dev) Initialize D1 schema on local DB" \
+		"make db-migrate-local   (Dev) Apply D1 migrations on local DB" \
 		"make db-pull            (Dev) Export prod D1 data & import to local D1" \
 		"make deploy             (Prod) Deploy the Python Worker" \
-		"make db-schema-remote   (Prod) Initialize D1 schema on remote DB" \
+		"make db-migrate-remote  (Prod) Apply D1 migrations on remote DB" \
+		"make db-schema-remote   (Prod) Initialize D1 schema on remote DB (alias for migrate)" \
 		"make secret-put-admin-token  (Prod) Set ADMIN_TOKEN" \
 		"make logs               (Logs) Start background wrangler logs tailing to logs/ folder" \
 		"make logs-stop          (Logs) Stop background wrangler logs tailing"
@@ -33,6 +35,9 @@ test:
 db-schema-local:
 	$(WRANGLER) d1 execute $(DB_NAME) --local --file=schema.sql
 
+db-migrate-local:
+	$(WRANGLER) d1 migrations apply $(DB_NAME) --local
+
 ## Sync D1 database from production (remote) to local development
 db-pull:
 	@echo "Exporting production D1 database ($(DB_NAME))..."
@@ -49,9 +54,11 @@ db-pull:
 deploy:
 	$(PYWRANGLER) deploy
 
-## Initialize D1 schema prod
-db-schema-remote:
-	$(WRANGLER) d1 execute $(DB_NAME) --remote --file=schema.sql
+## Apply D1 migrations on remote DB
+db-migrate-remote:
+	$(WRANGLER) d1 migrations apply $(DB_NAME) --remote
+
+db-schema-remote: db-migrate-remote
 
 ## Put ADMIN_TOKEN prod
 secret-put-admin-token:

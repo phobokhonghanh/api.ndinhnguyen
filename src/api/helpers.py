@@ -73,6 +73,13 @@ def get_payment_min_amount() -> float:
     return get_settings().payment_min_amount
 
 
+def get_addlivetag_api_key() -> str:
+    """
+    Retrieves the Addlivetag API key from settings.
+    """
+    return get_settings().addlivetag_api_key
+
+
 
 def get_model_data(model: Any, by_alias: bool = False) -> dict[str, Any]:
     """
